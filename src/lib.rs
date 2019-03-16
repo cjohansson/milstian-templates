@@ -22,6 +22,7 @@ struct Variable {
 
 enum LexerToken {
     And,
+    Assign(String, DataType),
     CustomFunction(String, Vec<Variable>),
     Echo,
     ElseIf,
