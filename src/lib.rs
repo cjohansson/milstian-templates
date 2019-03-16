@@ -1,6 +1,8 @@
 //! # Milstian Templates
 //!
 //! ![Milstian Logo](https://raw.githubusercontent.com/cjohansson/milstian-rust-internet-framework/master/html/img/logo1-modified.jpg)
+//!
+//! A template framework in Rust.
 
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
@@ -19,12 +21,15 @@ struct Variable {
 }
 
 enum LexerToken {
+    And,
     CustomFunction(String, Vec<Variable>),
     Echo,
     ElseIf,
     EndIf,
+    Equals,
     ForEach,
     If,
+    Or,
     String(String),
     Variable,
 }
