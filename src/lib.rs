@@ -13,6 +13,22 @@ pub enum DataType {
     Vector(Box<DataType>),
 }
 
+struct Variable {
+    datum: DataType,
+    name: String,
+}
+
+enum LexerToken {
+    CustomFunction(String, Vec<Variable>),
+    Echo,
+    ElseIf,
+    EndIf,
+    ForEach,
+    If,
+    String(String),
+    Variable,
+}
+
 pub struct Template {
     data: Option<HashMap<String, DataType>>,
     form: Option<String>,
@@ -25,16 +41,27 @@ impl Template {
 
     pub fn process(self) -> Result<String, String> {
         if let Some(form) = self.form {
-            if let Some(data) = self.data {
-                // TODO Attach data here
+            match Template::lex(form) {
+                Ok(lexer_tokens) => match Template::parse(lexer_tokens, self.data) {
+                    Ok(processed) => Ok(processed),
+                    Err(error) => Err(format!("Failed to parse tokens, error: {}", error)),
+                },
+                Err(error) => Err(format!("Failed to lex form, error: {}", error)),
             }
-
-            let processed = form.clone();
-            // TODO Process template here
-            Ok(processed)
         } else {
             Err("No form specified for template!".to_string())
         }
+    }
+
+    fn lex(form: String) -> Result<Vec<LexerToken>, String> {
+        Err("Failed to lex form".to_string())
+    }
+
+    fn parse(
+        lexer_tokens: Vec<LexerToken>,
+        data: Option<HashMap<String, DataType>>,
+    ) -> Result<String, String> {
+        Err("Failed to parse tokens".to_string())
     }
 }
 
