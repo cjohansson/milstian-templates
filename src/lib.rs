@@ -7,6 +7,7 @@
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 
+#[derive(Debug, PartialEq)]
 pub enum DataType {
     Float(f32),
     HashMap(HashMap<String, DataType>),
@@ -15,16 +16,19 @@ pub enum DataType {
     Vector(Box<DataType>),
 }
 
+#[derive(Debug, PartialEq)]
 struct Variable {
     datum: DataType,
     name: String,
 }
 
+#[derive(Debug, PartialEq)]
 enum LexerToken {
     And,
     Assign(String, DataType),
     CustomFunction(String, Vec<Variable>),
     Echo,
+    EndForeach,
     ElseIf,
     EndIf,
     Equals,
@@ -35,6 +39,21 @@ enum LexerToken {
     Variable,
 }
 
+#[derive(Debug, PartialEq)]
+struct LexerPosition {
+    char_end: u32,
+    char_start: u32,
+    line_end: u32,
+    line_start: u32,
+}
+
+#[derive(Debug, PartialEq)]
+struct LexerElement {
+    position: LexerPosition,
+    token: LexerToken,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Template {
     data: Option<HashMap<String, DataType>>,
     form: Option<String>,
@@ -48,7 +67,7 @@ impl Template {
     pub fn process(self) -> Result<String, String> {
         if let Some(form) = self.form {
             match Template::lex(form) {
-                Ok(lexer_tokens) => match Template::parse(lexer_tokens, self.data) {
+                Ok(lexer_elements) => match Template::parse(lexer_elements, self.data) {
                     Ok(processed) => Ok(processed),
                     Err(error) => Err(format!("Failed to parse tokens, error: {}", error)),
                 },
@@ -59,12 +78,12 @@ impl Template {
         }
     }
 
-    fn lex(form: String) -> Result<Vec<LexerToken>, String> {
+    fn lex(form: String) -> Result<Vec<LexerElement>, String> {
         Err("Failed to lex form".to_string())
     }
 
     fn parse(
-        lexer_tokens: Vec<LexerToken>,
+        lexer_tokens: Vec<LexerElement>,
         data: Option<HashMap<String, DataType>>,
     ) -> Result<String, String> {
         Err("Failed to parse tokens".to_string())
@@ -74,19 +93,29 @@ impl Template {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use Template::*;
 
     #[test]
-    fn test_process() {
-        let template = Template::new(Some("Random".to_string()), None);
-        let processed = template.process();
-        assert_eq!(processed.unwrap(), "Random".to_string());
-    }
+    fn test_process() {}
 
     #[test]
     fn test_parse() {}
 
     #[test]
-    fn test_lex() {}
+    fn test_lex() {
+        let lexed_tokens = Template::lex("Random".to_string()).unwrap();
+        let expected_lexed_tokens: Vec<LexerElement> = Vec::new();
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 10,
+                char_start: 0,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::String("Random".to_string()),
+        });
+        assert_eq!(lexed_tokens, expected_lexed_tokens);
+    }
 
     #[test]
     fn test_set_datum() {}
