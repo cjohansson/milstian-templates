@@ -4,7 +4,6 @@
 //!
 //! A template framework in Rust.
 
-use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
@@ -26,7 +25,7 @@ struct Variable {
 enum LexerToken {
     And,
     Assign(String, DataType),
-    CustomFunction(String, Vec<Variable>),
+    Call(String, Vec<Variable>),
     Echo,
     EndForeach,
     ElseIf,
@@ -36,7 +35,15 @@ enum LexerToken {
     If,
     Or,
     String(String),
-    Variable,
+    Variable(String),
+}
+
+#[derive(Debug, PartialEq)]
+enum LexerState {
+    Code,
+    Initial,
+    MaybeCode,
+    MaybeInitial,
 }
 
 #[derive(Debug, PartialEq)]
@@ -79,6 +86,36 @@ impl Template {
     }
 
     fn lex(form: String) -> Result<Vec<LexerElement>, String> {
+        let mut state = LexerState::Initial;
+        let mut buffer1 = String::new();
+        let mut buffer2 = String::new();
+        for character in form.iter()
+        {
+            match state {
+                LexerState::Initial => {
+                    if character == '{' {
+                        state = LexerState::MaybeCode;
+                        buffer2 = character.to_string();
+                    } else {
+                        buffer1.push(character);
+                    }
+                }
+                LexerState::MaybeCode => {
+                    buffer2.push(character);
+                    if character == '%' {
+                        buffer2.push(character);
+                    } else {
+                        buffer1 = '';
+                    }
+                }
+                LexerState::Code => {
+                    
+                }
+                LexerState::MaybeInitial => {
+                    
+                }
+            }
+        }
         Err("Failed to lex form".to_string())
     }
 
@@ -93,7 +130,6 @@ impl Template {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use Template::*;
 
     #[test]
     fn test_process() {}
@@ -103,11 +139,12 @@ mod tests {
 
     #[test]
     fn test_lex() {
+
         let lexed_tokens = Template::lex("Random".to_string()).unwrap();
-        let expected_lexed_tokens: Vec<LexerElement> = Vec::new();
+        let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 10,
+                char_end: 7,
                 char_start: 0,
                 line_end: 1,
                 line_start: 1,
@@ -115,6 +152,38 @@ mod tests {
             token: LexerToken::String("Random".to_string()),
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
+
+        let lexed_tokens = Template::lex("Random {% echo $var %}".to_string()).unwrap();
+        let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 7,
+                char_start: 0,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::String("Random".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 11,
+                char_start: 15,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Echo,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 20,
+                char_start: 15,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Variable("var".to_string()),
+        });
+        assert_eq!(lexed_tokens, expected_lexed_tokens);
+
     }
 
     #[test]
