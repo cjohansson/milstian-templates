@@ -42,8 +42,6 @@ enum LexerToken {
 enum LexerState {
     Code,
     Initial,
-    MaybeCode,
-    MaybeInitial,
 }
 
 #[derive(Debug, PartialEq)]
@@ -85,34 +83,39 @@ impl Template {
         }
     }
 
+    fn string_ends_with(needle: &str, buffer: &String) -> bool {
+        if buffer.len() >= needle.len() {
+            let start = buffer.len() - needle.len();
+            let ends_with = &buffer[start..];
+            if ends_with == needle {
+                return true
+            }
+        }
+        false
+    }
+
     fn lex(form: String) -> Result<Vec<LexerElement>, String> {
+        let mut tokens: Vec<LexerToken> = Vec::new();
         let mut state = LexerState::Initial;
         let mut buffer1 = String::new();
         let mut buffer2 = String::new();
-        for character in form.iter()
+        for character in form.chars()
         {
             match state {
                 LexerState::Initial => {
-                    if character == '{' {
-                        state = LexerState::MaybeCode;
-                        buffer2 = character.to_string();
+                    if Template::string_ends_with("{% ", &buffer1) {
+                        
+                        state = LexerState::Code;
                     } else {
                         buffer1.push(character);
                     }
                 }
-                LexerState::MaybeCode => {
-                    buffer2.push(character);
-                    if character == '%' {
-                        buffer2.push(character);
-                    } else {
-                        buffer1 = '';
-                    }
-                }
                 LexerState::Code => {
-                    
-                }
-                LexerState::MaybeInitial => {
-                    
+                    if Template::string_ends_with(" %}", &buffer1) {
+                        state = LexerState::Initial;
+                    } else {
+                        buffer1.push(character);
+                    }
                 }
             }
         }
