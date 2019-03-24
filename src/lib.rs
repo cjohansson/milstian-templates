@@ -83,38 +83,38 @@ impl Template {
         }
     }
 
-    fn string_ends_with(needle: &str, buffer: &String) -> bool {
+    fn string_ends_with(needle: &str, buffer: &String) -> Option<String> {
         if buffer.len() >= needle.len() {
             let start = buffer.len() - needle.len();
             let ends_with = &buffer[start..];
             if ends_with == needle {
-                return true
+                let new_buffer =  buffer[0..start].to_string();
+                return Some(new_buffer);
             }
         }
-        false
+        None
     }
 
     fn lex(form: String) -> Result<Vec<LexerElement>, String> {
         let mut tokens: Vec<LexerToken> = Vec::new();
         let mut state = LexerState::Initial;
-        let mut buffer1 = String::new();
-        let mut buffer2 = String::new();
-        for character in form.chars()
-        {
+        let mut buffer = String::new();
+        for character in form.chars() {
             match state {
                 LexerState::Initial => {
-                    if Template::string_ends_with("{% ", &buffer1) {
-                        
+                    if let Some(new_buffer) = Template::string_ends_with("{% ", &buffer) {
+                        buffer = new_buffer;
                         state = LexerState::Code;
                     } else {
-                        buffer1.push(character);
+                        buffer.push(character);
                     }
                 }
                 LexerState::Code => {
-                    if Template::string_ends_with(" %}", &buffer1) {
+                    if let Some(new_buffer) = Template::string_ends_with(" %}", &buffer) {
+                        buffer = new_buffer;
                         state = LexerState::Initial;
                     } else {
-                        buffer1.push(character);
+                        buffer.push(character);
                     }
                 }
             }
@@ -142,7 +142,6 @@ mod tests {
 
     #[test]
     fn test_lex() {
-
         let lexed_tokens = Template::lex("Random".to_string()).unwrap();
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
@@ -186,7 +185,6 @@ mod tests {
             token: LexerToken::Variable("var".to_string()),
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
-
     }
 
     #[test]
