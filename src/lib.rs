@@ -33,6 +33,7 @@ enum LexerToken {
     Equals,
     ForEach,
     If,
+    Inline(String),
     Or,
     String(String),
     Variable(String),
@@ -103,7 +104,8 @@ impl Template {
             match state {
                 LexerState::Initial => {
                     if let Some(new_buffer) = Template::string_ends_with("{% ", &buffer) {
-                        buffer = new_buffer;
+                        buffer = String::new();
+                        tokens.push(LexerToken::Inline(new_buffer));
                         state = LexerState::Code;
                     } else {
                         buffer.push(character);
@@ -111,13 +113,16 @@ impl Template {
                 }
                 LexerState::Code => {
                     if let Some(new_buffer) = Template::string_ends_with(" %}", &buffer) {
-                        buffer = new_buffer;
+                        buffer = String::new();
                         state = LexerState::Initial;
                     } else {
                         buffer.push(character);
                     }
                 }
             }
+        }
+        if tokens.len() > 0 {
+            return Ok(tokens);
         }
         Err("Failed to lex form".to_string())
     }
@@ -151,7 +156,7 @@ mod tests {
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::String("Random".to_string()),
+            token: LexerToken::Inline("Random".to_string()),
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
 
