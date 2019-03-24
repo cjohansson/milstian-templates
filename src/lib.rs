@@ -47,10 +47,10 @@ enum LexerState {
 
 #[derive(Debug, PartialEq)]
 struct LexerPosition {
-    char_end: u32,
-    char_start: u32,
-    line_end: u32,
-    line_start: u32,
+    char_end: usize,
+    char_start: usize,
+    line_end: usize,
+    line_start: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -97,15 +97,28 @@ impl Template {
     }
 
     fn lex(form: String) -> Result<Vec<LexerElement>, String> {
-        let mut tokens: Vec<LexerToken> = Vec::new();
+        let mut char_index: usize = 1;
+        let mut char_start: usize = 1;
+        let mut line_index: usize = 1;
+        let mut line_start: usize = 1;
+        let mut elements: Vec<LexerElement> = Vec::new();
         let mut state = LexerState::Initial;
         let mut buffer = String::new();
         for character in form.chars() {
             match state {
                 LexerState::Initial => {
                     if let Some(new_buffer) = Template::string_ends_with("{% ", &buffer) {
+                        
+                        elements.push(LexerElement {
+                            position: LexerPosition {
+                                char_end: char_index - new_buffer.len(),
+                                char_start,
+                                line_end: line_index,
+                                line_start,
+                            },
+                            token: LexerToken::Inline(new_buffer),
+                        });
                         buffer = String::new();
-                        tokens.push(LexerToken::Inline(new_buffer));
                         state = LexerState::Code;
                     } else {
                         buffer.push(character);
@@ -120,11 +133,23 @@ impl Template {
                     }
                 }
             }
+            char_index = char_index + 1;
+            if character == '\n' {
+                line_index = line_index + 1;
+            }
         }
-        if tokens.len() > 0 {
-            return Ok(tokens);
+        if !elements.len() > 0 {
+            elements.push(LexerElement {
+                position: LexerPosition {
+                    char_end: char_index,
+                    char_start,
+                    line_end: line_index,
+                    line_start,
+                },
+                token: LexerToken::Inline(form),
+            });
         }
-        Err("Failed to lex form".to_string())
+        return Ok(elements);
     }
 
     fn parse(
@@ -152,7 +177,7 @@ mod tests {
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
                 char_end: 7,
-                char_start: 0,
+                char_start: 1,
                 line_end: 1,
                 line_start: 1,
             },
@@ -164,17 +189,17 @@ mod tests {
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 7,
-                char_start: 0,
+                char_end: 8,
+                char_start: 1,
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::String("Random".to_string()),
+            token: LexerToken::Inline("Random ".to_string()),
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 11,
-                char_start: 15,
+                char_end: 15,
+                char_start: 11,
                 line_end: 1,
                 line_start: 1,
             },
@@ -183,7 +208,7 @@ mod tests {
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
                 char_end: 20,
-                char_start: 15,
+                char_start: 16,
                 line_end: 1,
                 line_start: 1,
             },
