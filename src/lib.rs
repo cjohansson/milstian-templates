@@ -4,6 +4,8 @@
 //!
 //! A template framework in Rust.
 
+extern crate regex;
+
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
@@ -26,6 +28,7 @@ enum LexerToken {
     And,
     Assign(String, DataType),
     Call(String, Vec<Variable>),
+    CloseTag,
     Echo,
     EndForeach,
     ElseIf,
@@ -34,6 +37,8 @@ enum LexerToken {
     ForEach,
     If,
     Inline(String),
+    OpenTag,
+    OpenTagWithEcho,
     Or,
     String(String),
     Variable(String),
@@ -88,8 +93,8 @@ impl Template {
         if buffer.len() >= needle.len() {
             let start = buffer.len() - needle.len();
             let ends_with = &buffer[start..];
-            if ends_with == needle {
-                let new_buffer =  buffer[0..start].to_string();
+            if ends_with.to_lowercase() == needle.to_lowercase() {
+                let new_buffer = buffer[0..start].to_string();
                 return Some(new_buffer);
             }
         }
@@ -105,10 +110,10 @@ impl Template {
         let mut state = LexerState::Initial;
         let mut buffer = String::new();
         for character in form.chars() {
+            buffer.push(character);
             match state {
                 LexerState::Initial => {
                     if let Some(new_buffer) = Template::string_ends_with("{% ", &buffer) {
-                        
                         elements.push(LexerElement {
                             position: LexerPosition {
                                 char_end: char_index - new_buffer.len(),
@@ -118,18 +123,48 @@ impl Template {
                             },
                             token: LexerToken::Inline(new_buffer),
                         });
+                        elements.push(LexerElement {
+                            position: LexerPosition {
+                                char_end: char_index,
+                                char_start: char_index - 3,
+                                line_end: line_index,
+                                line_start: line_index,
+                            },
+                            token: LexerToken::OpenTag,
+                        });
+                        char_start = char_index;
+                        line_start = line_index;
                         buffer = String::new();
                         state = LexerState::Code;
-                    } else {
-                        buffer.push(character);
                     }
                 }
                 LexerState::Code => {
-                    if let Some(new_buffer) = Template::string_ends_with(" %}", &buffer) {
+                    if let Some(_) = Template::string_ends_with(" %}", &buffer) {
+                        elements.push(LexerElement {
+                            position: LexerPosition {
+                                char_end: char_index,
+                                char_start: char_index - 3,
+                                line_end: line_index,
+                                line_start: line_index,
+                            },
+                            token: LexerToken::CloseTag,
+                        });
+                        char_start = char_index;
+                        line_start = line_index;
                         buffer = String::new();
                         state = LexerState::Initial;
-                    } else {
-                        buffer.push(character);
+                    } else if let Some(_) = Template::string_ends_with("echo ", &buffer) {
+                        elements.push(LexerElement {
+                            position: LexerPosition {
+                                char_end: char_index,
+                                char_start: char_index - 5,
+                                line_end: line_index,
+                                line_start: line_index,
+                            },
+                            token: LexerToken::Echo,
+                        });
+                        char_start = char_index;
+                        line_start = line_index;
                     }
                 }
             }
@@ -138,7 +173,7 @@ impl Template {
                 line_index = line_index + 1;
             }
         }
-        if !elements.len() > 0 {
+        if elements.len() == 0 {
             elements.push(LexerElement {
                 position: LexerPosition {
                     char_end: char_index,
@@ -198,6 +233,15 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
+                char_end: 11,
+                char_start: 8,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenTag,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
                 char_end: 15,
                 char_start: 11,
                 line_end: 1,
@@ -213,6 +257,15 @@ mod tests {
                 line_start: 1,
             },
             token: LexerToken::Variable("var".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 23,
+                char_start: 20,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseTag,
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
     }
