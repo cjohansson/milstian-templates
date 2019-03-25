@@ -89,13 +89,13 @@ impl Template {
         }
     }
 
-    fn string_ends_with(needle: &str, buffer: &String) -> Option<String> {
+    fn string_ends_with<'a>(needle: &'a str, buffer: &String) -> Option<(String, &'a str)> {
         if buffer.len() >= needle.len() {
             let start = buffer.len() - needle.len();
             let ends_with = &buffer[start..];
             if ends_with.to_lowercase() == needle.to_lowercase() {
                 let new_buffer = buffer[0..start].to_string();
-                return Some(new_buffer);
+                return Some((new_buffer, needle));
             }
         }
         None
@@ -113,7 +113,8 @@ impl Template {
             buffer.push(character);
             match state {
                 LexerState::Initial => {
-                    if let Some(new_buffer) = Template::string_ends_with("{% ", &buffer) {
+                    if let Some((new_buffer, pattern)) = Template::string_ends_with("{% ", &buffer)
+                    {
                         elements.push(LexerElement {
                             position: LexerPosition {
                                 char_end: char_index - new_buffer.len(),
@@ -126,7 +127,7 @@ impl Template {
                         elements.push(LexerElement {
                             position: LexerPosition {
                                 char_end: char_index,
-                                char_start: char_index - 3,
+                                char_start: char_index - pattern.len(),
                                 line_end: line_index,
                                 line_start: line_index,
                             },
@@ -139,11 +140,11 @@ impl Template {
                     }
                 }
                 LexerState::Code => {
-                    if let Some(_) = Template::string_ends_with(" %}", &buffer) {
+                    if let Some((_, pattern)) = Template::string_ends_with(" %}", &buffer) {
                         elements.push(LexerElement {
                             position: LexerPosition {
                                 char_end: char_index,
-                                char_start: char_index - 3,
+                                char_start: char_index - pattern.len(),
                                 line_end: line_index,
                                 line_start: line_index,
                             },
@@ -153,11 +154,12 @@ impl Template {
                         line_start = line_index;
                         buffer = String::new();
                         state = LexerState::Initial;
-                    } else if let Some(_) = Template::string_ends_with("echo ", &buffer) {
+                    } else if let Some((_, pattern)) = Template::string_ends_with("echo ", &buffer)
+                    {
                         elements.push(LexerElement {
                             position: LexerPosition {
                                 char_end: char_index,
-                                char_start: char_index - 5,
+                                char_start: char_index - pattern.len(),
                                 line_end: line_index,
                                 line_start: line_index,
                             },
