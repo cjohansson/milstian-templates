@@ -6,6 +6,7 @@
 
 extern crate regex;
 
+use regex::Regex;
 use std::collections::HashMap;
 
 #[derive(Debug, PartialEq)]
@@ -89,7 +90,7 @@ impl Template {
         }
     }
 
-    fn string_ends_with<'a>(needle: &'a str, buffer: &String) -> Option<(String, &'a str)> {
+    fn string_ends_with_string<'a>(needle: &'a str, buffer: &String) -> Option<(String, &'a str)> {
         if buffer.len() >= needle.len() {
             let start = buffer.len() - needle.len();
             let ends_with = &buffer[start..];
@@ -97,6 +98,20 @@ impl Template {
                 let new_buffer = buffer[0..start].to_string();
                 return Some((new_buffer, needle));
             }
+        }
+        None
+    }
+
+    fn string_ends_with_regex(old_needle: &str, buffer: &str) -> Option<(String, String)> {
+        let needle = format!("{}$", old_needle);
+        let pattern = Regex::new(&needle).unwrap();
+        if pattern.is_match(buffer) {
+            let hit = pattern.find(buffer).unwrap();
+            let start = hit.start();
+            let end = hit.end();
+            let new_buffer = buffer[0..start].to_string();
+            let matched_string = buffer[start..end].to_string();
+            return Some((new_buffer, matched_string));
         }
         None
     }
@@ -113,7 +128,8 @@ impl Template {
             buffer.push(character);
             match state {
                 LexerState::Initial => {
-                    if let Some((new_buffer, pattern)) = Template::string_ends_with("{% ", &buffer)
+                    if let Some((new_buffer, pattern)) =
+                        Template::string_ends_with_string("{% ", &buffer)
                     {
                         elements.push(LexerElement {
                             position: LexerPosition {
@@ -140,7 +156,7 @@ impl Template {
                     }
                 }
                 LexerState::Code => {
-                    if let Some((_, pattern)) = Template::string_ends_with(" %}", &buffer) {
+                    if let Some((_, pattern)) = Template::string_ends_with_string(" %}", &buffer) {
                         elements.push(LexerElement {
                             position: LexerPosition {
                                 char_end: char_index,
@@ -154,7 +170,8 @@ impl Template {
                         line_start = line_index;
                         buffer = String::new();
                         state = LexerState::Initial;
-                    } else if let Some((_, pattern)) = Template::string_ends_with("echo ", &buffer)
+                    } else if let Some((_, pattern)) =
+                        Template::string_ends_with_string("echo ", &buffer)
                     {
                         elements.push(LexerElement {
                             position: LexerPosition {
@@ -167,6 +184,20 @@ impl Template {
                         });
                         char_start = char_index;
                         line_start = line_index;
+                        buffer = String::new();
+                    } else if let Some((_, pattern)) =
+                        Template::string_ends_with_regex(r"\$[a-zA-Z][a-zA-Z0-9_]*", &buffer)
+                    {
+                        elements.push(LexerElement {
+                            position: LexerPosition {
+                                char_end: char_index,
+                                char_start: char_index - pattern.len(),
+                                line_end: line_index,
+                                line_start: line_index,
+                            },
+                            token: LexerToken::Variable(pattern.to_string()),
+                        });
+                        buffer = String::new();
                     }
                 }
             }
@@ -200,6 +231,46 @@ impl Template {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_string_ends_with_string()
+    {
+        let buffer = "Blaha Random".to_string();
+        assert_eq!(
+            Template::string_ends_with_string("andom", &buffer),
+            Some(("Blaha R".to_string(), "andom"))
+        );
+        assert_eq!(
+            Template::string_ends_with_string("bandom", &buffer),
+            None
+        );
+    }
+
+    #[test]
+    fn test_string_ends_with_regex()
+    {
+        let buffer = "Blaha Random";
+        assert_eq!(
+            Template::string_ends_with_regex(r" [a-zA-Z]+", &buffer),
+            Some(("Blaha".to_string(), " Random".to_string()))
+        );
+        assert_eq!(
+            Template::string_ends_with_regex(r" [a-z]+", &buffer),
+            None
+        );
+
+        let buffer = "Blaha Random123";
+        assert_eq!(
+            Template::string_ends_with_regex(r" [a-zA-Z]+", &buffer),
+            None
+        );
+
+        let buffer = "Blaha $var";
+        assert_eq!(
+            Template::string_ends_with_regex(r"\$[a-zA-Z][a-zA-Z0-9_]*", &buffer),
+            Some(("Blaha ".to_string(), "$var".to_string()))
+        );
+    }
 
     #[test]
     fn test_process() {}
