@@ -66,6 +66,36 @@ struct LexerElement {
 }
 
 #[derive(Debug, PartialEq)]
+enum LexerTokenMatchPattern {
+    Literal(String),
+    Regex(String),
+}
+
+struct LexerTokenMatcher {
+    length: u32,
+    logic: Box<Fn(&String, u32, &mut Vec<LexerElement>, &mut LexerState)>,
+    matches: bool,
+    pattern: LexerTokenMatchPattern,
+}
+
+impl LexerTokenMatcher {
+    fn test(self, buffer: String) -> bool {
+        match self.pattern {
+            LexerTokenMatchPattern::Literal(pattern) => {
+                
+            }
+            LexerTokenMatchPattern::Regex(pattern) => {
+                self.matches = string_start_with_string(buffer, pattern);
+                if self.matches {
+                    self.length = pattern.len();
+                }
+                return self.matches;
+            }
+        }
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub struct Template {
     data: Option<HashMap<String, DataType>>,
     form: Option<String>,
@@ -124,6 +154,17 @@ impl Template {
         let mut elements: Vec<LexerElement> = Vec::new();
         let mut state = LexerState::Initial;
         let mut buffer = String::new();
+
+        // New algorithm here
+        let mut best_match_logic: Fn(pattern: TokenPattern, buffer: String, buffer_position: u32, state: LexerState);
+        let mut best_match_length: u32 = 0;
+
+        while char_index < form.len() {
+            
+        }
+
+
+        // Old algorithm here
         for character in form.chars() {
             buffer.push(character);
             match state {
