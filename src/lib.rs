@@ -72,7 +72,7 @@ enum LexerTokenMatchPattern {
 }
 
 struct LexerTokenMatcher {
-    length: u32,
+    match_length: usize,
     logic: Box<Fn(&String, u32, &mut Vec<LexerElement>, &mut LexerState)>,
     matches: bool,
     pattern: LexerTokenMatchPattern,
@@ -82,12 +82,25 @@ impl LexerTokenMatcher {
     fn test(self, buffer: String) -> bool {
         match self.pattern {
             LexerTokenMatchPattern::Literal(pattern) => {
-                
+                self.matches = false;
+                self.match_length = pattern.len();
+                if buffer.len() >= pattern.len() {
+                    let end = pattern.len();
+                    let starts_with = &buffer[0..end];
+                    if starts_with.to_lowercase() == pattern.to_lowercase() {
+                        self.match_length = pattern.len();
+                    }
+                }
+                return self.matches;
             }
             LexerTokenMatchPattern::Regex(pattern) => {
-                self.matches = string_start_with_string(buffer, pattern);
-                if self.matches {
-                    self.length = pattern.len();
+                self.matches = false;
+                self.match_length = pattern.len();
+                let needle = format!("^{}", pattern);
+                let re_pattern = Regex::new(&needle).unwrap();
+                if let Some(pattern_match) = re_pattern.find(&buffer) {
+                    self.match_length = pattern_match.end();
+                    self.matches = true;
                 }
                 return self.matches;
             }
@@ -156,7 +169,7 @@ impl Template {
         let mut buffer = String::new();
 
         // New algorithm here
-        let mut best_match_logic: Fn(pattern: TokenPattern, buffer: String, buffer_position: u32, state: LexerState);
+        let mut best_match_logic: Fn(TokenPattern, String, u32, &LexerState);
         let mut best_match_length: u32 = 0;
 
         while char_index < form.len() {
