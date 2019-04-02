@@ -72,39 +72,42 @@ enum LexerTokenMatchPattern {
 }
 
 struct LexerTokenMatcher {
-    match_length: usize,
-    logic: Box<Fn(&String, u32, &mut Vec<LexerElement>, &mut LexerState)>,
-    matches: bool,
+    logic: Box<Fn(&String, &usize, &mut Vec<LexerElement>, &mut LexerState)>,
     pattern: LexerTokenMatchPattern,
+    pub state: LexerState,
 }
 
 impl LexerTokenMatcher {
-    fn test(self, buffer: String) -> bool {
-        match self.pattern {
+    pub fn test(&self, buffer: &str) -> usize {
+        match &self.pattern {
             LexerTokenMatchPattern::Literal(pattern) => {
-                self.matches = false;
-                self.match_length = pattern.len();
                 if buffer.len() >= pattern.len() {
                     let end = pattern.len();
                     let starts_with = &buffer[0..end];
                     if starts_with.to_lowercase() == pattern.to_lowercase() {
-                        self.match_length = pattern.len();
+                        return pattern.len();
                     }
                 }
-                return self.matches;
             }
             LexerTokenMatchPattern::Regex(pattern) => {
-                self.matches = false;
-                self.match_length = pattern.len();
                 let needle = format!("^{}", pattern);
                 let re_pattern = Regex::new(&needle).unwrap();
                 if let Some(pattern_match) = re_pattern.find(&buffer) {
-                    self.match_length = pattern_match.end();
-                    self.matches = true;
+                    return pattern_match.end();
                 }
-                return self.matches;
             }
         }
+        0
+    }
+
+    pub fn execute(
+        self,
+        buffer: &String,
+        index: &usize,
+        elements: &mut Vec<LexerElement>,
+        state: &mut LexerState,
+    ) {
+        (*self.logic)(buffer, index, elements, state)
     }
 }
 
@@ -169,13 +172,50 @@ impl Template {
         let mut buffer = String::new();
 
         // New algorithm here
-        let mut best_match_logic: Fn(TokenPattern, String, u32, &LexerState);
-        let mut best_match_length: u32 = 0;
+        let mut best_match_index: usize = 0;
+        let mut best_match_length: usize = 0;
+        let mut index: usize = 0;
+
+        let mut items: Vec<LexerTokenMatcher> = Vec::new();
+
+        // Setup lexer patterns here
+        items.push(LexerTokenMatcher {
+            logic: Box::new(
+                |buffer: &String,
+                 index: &usize,
+                 elements: &mut Vec<LexerElement>,
+                 state: &mut LexerState| {
+                    // TODO: Implement this
+                },
+            ),
+            pattern: LexerTokenMatchPattern::Literal("{% ".to_string()),
+            state: LexerState::Initial,
+        });
 
         while char_index < form.len() {
-            
-        }
+            best_match_length = 0;
+            index = 0;
+            for item in &items {
+                if item.state == state {
+                    let match_length = item.test(&form[char_index..]);
+                    if match_length > 0 {
+                        if match_length > best_match_length {
+                            best_match_length = match_length;
+                            best_match_index = index;
+                        }
+                    }
+                }
+                index = index + 1;
+            }
 
+            if best_match_length > 0 {
+                let best_match = items.get(best_match_index).unwrap();
+                best_match.execute(&buffer, &char_index, &mut elements, &mut state);
+                char_index = char_index + best_match_length;
+            } else {
+                char_index = char_index + 1;
+            }
+        }
 
         // Old algorithm here
         for character in form.chars() {
@@ -287,31 +327,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_string_ends_with_string()
-    {
+    fn test_string_ends_with_string() {
         let buffer = "Blaha Random".to_string();
         assert_eq!(
             Template::string_ends_with_string("andom", &buffer),
             Some(("Blaha R".to_string(), "andom"))
         );
-        assert_eq!(
-            Template::string_ends_with_string("bandom", &buffer),
-            None
-        );
+        assert_eq!(Template::string_ends_with_string("bandom", &buffer), None);
     }
 
     #[test]
-    fn test_string_ends_with_regex()
-    {
+    fn test_string_ends_with_regex() {
         let buffer = "Blaha Random";
         assert_eq!(
             Template::string_ends_with_regex(r" [a-zA-Z]+", &buffer),
             Some(("Blaha".to_string(), " Random".to_string()))
         );
-        assert_eq!(
-            Template::string_ends_with_regex(r" [a-z]+", &buffer),
-            None
-        );
+        assert_eq!(Template::string_ends_with_regex(r" [a-z]+", &buffer), None);
 
         let buffer = "Blaha Random123";
         assert_eq!(
