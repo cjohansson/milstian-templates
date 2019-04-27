@@ -11,7 +11,6 @@ pub mod tokens;
 use regex::Regex;
 use std::collections::HashMap;
 
-
 #[derive(Debug, PartialEq)]
 pub enum DataType {
     Float(f32),
@@ -30,7 +29,7 @@ pub struct Variable {
 #[derive(Debug, PartialEq)]
 pub enum LexerToken {
     Addition,
-    AdditionOne,
+    AddOne,
     And,
     Assign(String, DataType),
     Call(String, Vec<Variable>),
@@ -53,7 +52,7 @@ pub enum LexerToken {
     SingleQuotedString(String),
     StringConcatenation,
     Subtraction,
-    SubtractionOne,
+    SubtractOne,
     Variable(String),
 }
 
