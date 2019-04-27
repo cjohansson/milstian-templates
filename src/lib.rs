@@ -188,15 +188,14 @@ impl Template {
 
     fn lex(&self) -> Result<Vec<LexerElement>, &str> {
         let form: &str = &self.form;
-        let mut char_index: usize = 1;
-        let mut char_start: usize = 1;
+        let mut char_index: usize = 0;
+        let mut char_start: usize = 0;
         let mut char_end: usize = 1;
         let mut line_index: usize = 1;
         let mut line_start: usize = 1;
         let mut line_end: usize = 1;
         let mut elements: Vec<LexerElement> = Vec::new();
         let mut state = LexerState::Initial;
-        let mut buffer = String::new();
 
         // New algorithm here
         let mut best_match_index: usize = 0;
@@ -218,8 +217,8 @@ impl Template {
                  line_end: &usize,
                  elements: &mut Vec<LexerElement>,
                  state: &mut LexerState| {
-                    println!("Was here");
-                    let new_buffer: &str = &buffer[*char_start..*char_end];
+                    println!("Was here {}-{} of '{}'", &char_start, &char_end, &buffer);
+                    let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
                     elements.push(LexerElement {
                         position: LexerPosition {
                             char_end: *char_end,
@@ -231,8 +230,8 @@ impl Template {
                     });
                     elements.push(LexerElement {
                         position: LexerPosition {
-                            char_end: (*char_index),
-                            char_start: char_index - length,
+                            char_end: char_index + length,
+                            char_start: (*char_index),
                             line_end: (*line_index),
                             line_start: (*line_index),
                         },
@@ -264,7 +263,7 @@ impl Template {
             if best_match_length > 0 {
                 let best_match = items.get(best_match_index).unwrap();
                 best_match.execute(
-                    &buffer,
+                    &form,
                     &char_index,
                     &char_start,
                     &char_end,
@@ -276,7 +275,10 @@ impl Template {
                     &mut state,
                 );
                 char_index = char_index + best_match_length;
+                char_start = char_index;
+                char_end = char_index;
             } else {
+                char_end = char_index;
                 char_index = char_index + 1;
             }
         }
@@ -284,7 +286,7 @@ impl Template {
         if elements.len() == 0 {
             elements.push(LexerElement {
                 position: LexerPosition {
-                    char_end: char_index,
+                    char_end: form.len() - 1,
                     char_start,
                     line_end: line_index,
                     line_start,
@@ -351,8 +353,8 @@ mod tests {
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 6,
-                char_start: 1,
+                char_end: 5,
+                char_start: 0,
                 line_end: 1,
                 line_start: 1,
             },
@@ -364,8 +366,8 @@ mod tests {
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 7,
-                char_start: 1,
+                char_end: 6,
+                char_start: 0,
                 line_end: 1,
                 line_start: 1,
             },
@@ -373,8 +375,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 11,
-                char_start: 8,
+                char_end: 10,
+                char_start: 7,
                 line_end: 1,
                 line_start: 1,
             },
