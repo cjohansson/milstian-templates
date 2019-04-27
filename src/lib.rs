@@ -25,10 +25,10 @@ struct Variable {
 }
 
 #[derive(Debug, PartialEq)]
-enum LexerToken<'a> {
+enum LexerToken {
     And,
-    Assign(&'a str, DataType),
-    Call(&'a str, Vec<Variable>),
+    Assign(String, DataType),
+    Call(String, Vec<Variable>),
     CloseTag,
     Echo,
     EndForeach,
@@ -37,12 +37,12 @@ enum LexerToken<'a> {
     Equals,
     ForEach,
     If,
-    Inline(&'a str),
+    Inline(String),
     OpenTag,
     OpenTagWithEcho,
     Or,
-    String(&'a str),
-    Variable(&'a str),
+    String(String),
+    Variable(String),
 }
 
 #[derive(Debug, PartialEq)]
@@ -60,9 +60,9 @@ struct LexerPosition {
 }
 
 #[derive(Debug, PartialEq)]
-struct LexerElement<'a> {
+struct LexerElement {
     position: LexerPosition,
-    token: LexerToken<'a>,
+    token: LexerToken,
 }
 
 #[derive(Debug, PartialEq)]
@@ -71,10 +71,10 @@ enum LexerTokenMatchPattern {
     Regex(String),
 }
 
-struct LexerTokenMatcher<'a> {
+struct LexerTokenMatcher {
     logic: Box<
         Fn(
-            &'a str,   // Buffer
+            &str,   // Buffer
             &usize, // Character index
             &usize, // Character start
             &usize, // Character end
@@ -90,8 +90,8 @@ struct LexerTokenMatcher<'a> {
     pub state: LexerState,
 }
 
-impl <'a> LexerTokenMatcher<'a> {
-    pub fn test(&self, buffer: &'a str) -> usize {
+impl LexerTokenMatcher {
+    pub fn test<'a>(&self, buffer: &'a str) -> usize {
         match &self.pattern {
             LexerTokenMatchPattern::Literal(pattern) => {
                 if buffer.len() >= pattern.len() {
@@ -113,7 +113,7 @@ impl <'a> LexerTokenMatcher<'a> {
         0
     }
 
-    pub fn execute(
+    pub fn execute<'a>(
         &self,
         buffer: &'a str,
         char_index: &usize,
@@ -134,19 +134,19 @@ impl <'a> LexerTokenMatcher<'a> {
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Template<'a> {
+pub struct Template {
     data: Option<HashMap<String, DataType>>,
-    form: &'a str,
+    form: String,
 }
 
-impl<'a> Template<'a> {
-    pub fn new(form: &'a str, data: Option<HashMap<String, DataType>>) -> Template<'a> {
+impl Template {
+    pub fn new(form: String, data: Option<HashMap<String, DataType>>) -> Template {
         Template { form, data }
     }
 
     pub fn process(&self) -> Result<String, String> {
-        match &self.lex() {
-            Ok(lexer_elements) => match Template::parse(lexer_elements, self.data) {
+        match self.lex() {
+            Ok(lexer_elements) => match Template::parse(lexer_elements, &self.data) {
                 Ok(processed) => Ok(processed),
                 Err(error) => Err(format!("Failed to parse tokens, error: {}", error)),
             },
@@ -186,8 +186,8 @@ impl<'a> Template<'a> {
         None
     }
 
-    fn lex(&self) -> Result<Vec<LexerElement<'a>>, &str> {
-        let form = self.form;
+    fn lex(&self) -> Result<Vec<LexerElement>, &str> {
+        let form: &str = &self.form;
         let mut char_index: usize = 1;
         let mut char_start: usize = 1;
         let mut char_end: usize = 1;
@@ -219,7 +219,7 @@ impl<'a> Template<'a> {
                  elements: &mut Vec<LexerElement>,
                  state: &mut LexerState| {
                     println!("Was here");
-                    let new_buffer = &buffer[*char_start..*char_end];
+                    let new_buffer: &str = &buffer[*char_start..*char_end];
                     elements.push(LexerElement {
                         position: LexerPosition {
                             char_end: *char_end,
@@ -227,7 +227,7 @@ impl<'a> Template<'a> {
                             line_end: *line_end,
                             line_start: *line_start,
                         },
-                        token: LexerToken::Inline(new_buffer),
+                        token: LexerToken::Inline(new_buffer.to_string()),
                     });
                     elements.push(LexerElement {
                         position: LexerPosition {
@@ -289,7 +289,7 @@ impl<'a> Template<'a> {
                     line_end: line_index,
                     line_start,
                 },
-                token: LexerToken::Inline(form),
+                token: LexerToken::Inline(form.to_string()),
             });
         }
         return Ok(elements);
@@ -297,7 +297,7 @@ impl<'a> Template<'a> {
 
     fn parse(
         lexer_tokens: Vec<LexerElement>,
-        data: Option<HashMap<String, DataType>>,
+        data: &Option<HashMap<String, DataType>>,
     ) -> Result<String, String> {
         Err("Failed to parse tokens".to_string())
     }
@@ -311,30 +311,30 @@ mod tests {
     fn test_string_ends_with_string() {
         let buffer = "Blaha Random";
         assert_eq!(
-            Template::string_ends_with_string("andom", &buffer),
+            Template::string_ends_with_string(&buffer, "andom"),
             Some(("Blaha R", "andom"))
         );
-        assert_eq!(Template::string_ends_with_string("bandom", &buffer), None);
+        assert_eq!(Template::string_ends_with_string(&buffer, "bandom"), None);
     }
 
     #[test]
     fn test_string_ends_with_regex() {
         let buffer = "Blaha Random";
         assert_eq!(
-            Template::string_ends_with_regex(r" [a-zA-Z]+", &buffer),
+            Template::string_ends_with_regex(&buffer, r" [a-zA-Z]+"),
             Some(("Blaha", " Random"))
         );
-        assert_eq!(Template::string_ends_with_regex(r" [a-z]+", &buffer), None);
+        assert_eq!(Template::string_ends_with_regex(&buffer, r" [a-z]+"), None);
 
         let buffer = "Blaha Random123";
         assert_eq!(
-            Template::string_ends_with_regex(r" [a-zA-Z]+", &buffer),
+            Template::string_ends_with_regex(&buffer, r" [a-zA-Z]+"),
             None
         );
 
         let buffer = "Blaha $var";
         assert_eq!(
-            Template::string_ends_with_regex(r"\$[a-zA-Z][a-zA-Z0-9_]*", &buffer),
+            Template::string_ends_with_regex(&buffer, r"\$[a-zA-Z][a-zA-Z0-9_]*"),
             Some(("Blaha ", "$var"))
         );
     }
@@ -347,7 +347,20 @@ mod tests {
 
     #[test]
     fn test_lex() {
-        let lexed_tokens = Template::new("Random", None).lex().unwrap();
+        let lexed_tokens = Template::new("Random".to_string(), None).lex().unwrap();
+        let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 6,
+                char_start: 1,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Inline("Random".to_string()),
+        });
+        assert_eq!(lexed_tokens, expected_lexed_tokens);
+
+        let lexed_tokens = Template::new("Random {% echo $var %}".to_string(), None).lex().unwrap();
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
@@ -356,20 +369,7 @@ mod tests {
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::Inline("Random"),
-        });
-        assert_eq!(lexed_tokens, expected_lexed_tokens);
-
-        let lexed_tokens = Template::new("Random {% echo $var %}", None).lex().unwrap();
-        let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
-        expected_lexed_tokens.push(LexerElement {
-            position: LexerPosition {
-                char_end: 8,
-                char_start: 1,
-                line_end: 1,
-                line_start: 1,
-            },
-            token: LexerToken::Inline("Random "),
+            token: LexerToken::Inline("Random ".to_string()),
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
@@ -396,7 +396,7 @@ mod tests {
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::Variable("var"),
+            token: LexerToken::Variable("var".to_string()),
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
