@@ -6,8 +6,11 @@
 
 extern crate regex;
 
+pub mod tokens;
+
 use regex::Regex;
 use std::collections::HashMap;
+
 
 #[derive(Debug, PartialEq)]
 pub enum DataType {
@@ -19,14 +22,15 @@ pub enum DataType {
 }
 
 #[derive(Debug, PartialEq)]
-struct Variable {
+pub struct Variable {
     datum: DataType,
     name: String,
 }
 
 #[derive(Debug, PartialEq)]
-enum LexerToken {
+pub enum LexerToken {
     Addition,
+    AdditionOne,
     And,
     Assign(String, DataType),
     Call(String, Vec<Variable>),
@@ -49,17 +53,18 @@ enum LexerToken {
     SingleQuotedString(String),
     StringConcatenation,
     Subtraction,
+    SubtractionOne,
     Variable(String),
 }
 
 #[derive(Debug, PartialEq)]
-enum LexerState {
+pub enum LexerState {
     Code,
     Initial,
 }
 
 #[derive(Debug, PartialEq)]
-struct LexerPosition {
+pub struct LexerPosition {
     char_end: usize,
     char_start: usize,
     line_end: usize,
@@ -67,18 +72,18 @@ struct LexerPosition {
 }
 
 #[derive(Debug, PartialEq)]
-struct LexerElement {
+pub struct LexerElement {
     position: LexerPosition,
     token: LexerToken,
 }
 
 #[derive(Debug, PartialEq)]
-enum LexerTokenMatchPattern {
+pub enum LexerTokenMatchPattern {
     Literal(String),
     Regex(String),
 }
 
-struct LexerTokenMatcher {
+pub struct LexerTokenMatcher {
     logic: Box<
         Fn(
             &str,   // Buffer
@@ -209,193 +214,7 @@ impl Template {
         let mut best_match_length: usize;
         let mut index: usize;
 
-        let mut items: Vec<LexerTokenMatcher> = Vec::new();
-
-        // Setup lexer patterns here
-        items.push(LexerTokenMatcher {
-            logic: Box::new(
-                |buffer: &str,
-                char_index: &usize,
-                char_start: &usize,
-                char_end: &usize,
-                length: &usize,
-                line_index: &usize,
-                line_start: &usize,
-                line_end: &usize,
-                elements: &mut Vec<LexerElement>,
-                state: &mut LexerState| {
-                    let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: *char_end,
-                            char_start: *char_start,
-                            line_end: *line_end,
-                            line_start: *line_start,
-                        },
-                        token: LexerToken::Inline(new_buffer.to_string()),
-                    });
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: (char_index + length),
-                            char_start: (*char_index),
-                            line_end: (*line_end),
-                            line_start: (*line_start),
-                        },
-                        token: LexerToken::OpenTag,
-                    });
-                    (*state) = LexerState::Code;
-                },
-            ),
-            pattern: LexerTokenMatchPattern::Literal("{% ".to_string()),
-            state: LexerState::Initial,
-        });
-        items.push(LexerTokenMatcher {
-            logic: Box::new(
-                |buffer: &str,
-                char_index: &usize,
-                char_start: &usize,
-                char_end: &usize,
-                length: &usize,
-                line_index: &usize,
-                line_start: &usize,
-                line_end: &usize,
-                elements: &mut Vec<LexerElement>,
-                state: &mut LexerState| {
-                    let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: *char_end,
-                            char_start: *char_start,
-                            line_end: *line_end,
-                            line_start: *line_start,
-                        },
-                        token: LexerToken::Inline(new_buffer.to_string()),
-                    });
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: (char_index + length),
-                            char_start: (*char_index),
-                            line_end: (*line_end),
-                            line_start: (*line_start),
-                        },
-                        token: LexerToken::OpenTagWithEcho,
-                    });
-                    (*state) = LexerState::Code;
-                },
-            ),
-            pattern: LexerTokenMatchPattern::Literal("{{ ".to_string()),
-            state: LexerState::Initial,
-        });
-        items.push(LexerTokenMatcher {
-            logic: Box::new(
-                |buffer: &str,
-                char_index: &usize,
-                char_start: &usize,
-                char_end: &usize,
-                length: &usize,
-                line_index: &usize,
-                line_start: &usize,
-                line_end: &usize,
-                elements: &mut Vec<LexerElement>,
-                state: &mut LexerState| {
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: (char_index + length),
-                            char_start: (*char_index),
-                            line_end: (*line_end),
-                            line_start: (*line_start),
-                        },
-                        token: LexerToken::Echo,
-                    });
-                    (*state) = LexerState::Code;
-                },
-            ),
-            pattern: LexerTokenMatchPattern::Literal("echo".to_string()),
-            state: LexerState::Code,
-        });
-        items.push(LexerTokenMatcher {
-            logic: Box::new(
-                |buffer: &str,
-                char_index: &usize,
-                char_start: &usize,
-                char_end: &usize,
-                length: &usize,
-                line_index: &usize,
-                line_start: &usize,
-                line_end: &usize,
-                elements: &mut Vec<LexerElement>,
-                state: &mut LexerState| {
-                    let variable_name = &buffer[(char_index+1)..(char_index + length)];
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: (char_index + length),
-                            char_start: (*char_index),
-                            line_end: (*line_end),
-                            line_start: (*line_start),
-                        },
-                        token: LexerToken::Variable(variable_name.to_string()),
-                    });
-                    (*state) = LexerState::Code;
-                },
-            ),
-            pattern: LexerTokenMatchPattern::Regex(r"\$[a-zA-Z][a-zA-Z0-9_]*".to_string()),
-            state: LexerState::Code,
-        });
-        items.push(LexerTokenMatcher {
-            logic: Box::new(
-                |_buffer: &str,
-                char_index: &usize,
-                char_start: &usize,
-                char_end: &usize,
-                length: &usize,
-                line_index: &usize,
-                line_start: &usize,
-                line_end: &usize,
-                elements: &mut Vec<LexerElement>,
-                state: &mut LexerState| {
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: (char_index + length),
-                            char_start: (*char_index),
-                            line_end: (*line_end),
-                            line_start: (*line_start),
-                        },
-                        token: LexerToken::CloseTag,
-                    });
-                    (*state) = LexerState::Initial;
-                },
-            ),
-            pattern: LexerTokenMatchPattern::Literal(" %}".to_string()),
-            state: LexerState::Code,
-        });
-        items.push(LexerTokenMatcher {
-            logic: Box::new(
-                |_buffer: &str,
-                char_index: &usize,
-                char_start: &usize,
-                char_end: &usize,
-                length: &usize,
-                line_index: &usize,
-                line_start: &usize,
-                line_end: &usize,
-                elements: &mut Vec<LexerElement>,
-                state: &mut LexerState| {
-                    elements.push(LexerElement {
-                        position: LexerPosition {
-                            char_end: (char_index + length),
-                            char_start: (*char_index),
-                            line_end: (*line_end),
-                            line_start: (*line_start),
-                        },
-                        token: LexerToken::CloseTagWithEcho,
-                    });
-                    (*state) = LexerState::Initial;
-                },
-            ),
-            pattern: LexerTokenMatchPattern::Literal(" }}".to_string()),
-            state: LexerState::Code,
-        });
-
+        let items = tokens::get_lexer_items();
         while char_index < form.len() {
             best_match_length = 0;
             index = 0;
