@@ -38,9 +38,90 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
 
-    // TODO AdditionOne
-    // TODO And
-    // TODO Assign
+    // AddOne
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::AddOne,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("++".to_string()),
+        state: LexerState::Code,
+    });
+
+    // And
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::And,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("and".to_string()),
+        state: LexerState::Code,
+    });
+
+    // Assign
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::And,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("=".to_string()),
+        state: LexerState::Code,
+    });
+
     // TODO Call
 
     // CloseTag
@@ -101,7 +182,34 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
 
-    // TODO Division
+    // Division
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::Division,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("/".to_string()),
+        state: LexerState::Code,
+    });
+
     // TODO DoubleQuotedString
 
     // Echo
@@ -133,13 +241,201 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
 
-    // TODO EndForEach
-    // TODO ElseIf
-    // TODO Endif
-    // TODO Equals
-    // TODO ForEach
-    // TODO If
-    // TODO Multiplication
+    // EndForEach
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::EndForEach,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("endforeach".to_string()),
+        state: LexerState::Code,
+    });
+
+    // ElseIf
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::ElseIf,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("elseif".to_string()),
+        state: LexerState::Code,
+    });
+
+    // EndIf
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::EndIf,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("endif".to_string()),
+        state: LexerState::Code,
+    });
+
+    // Equals
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::Equals,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("equals".to_string()),
+        state: LexerState::Code,
+    });
+
+    // ForEach
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::ForEach,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("foreach".to_string()),
+        state: LexerState::Code,
+    });
+
+    // If
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::If,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("if".to_string()),
+        state: LexerState::Code,
+    });
+
+    // Multiplication
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::Multiplication,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("*".to_string()),
+        state: LexerState::Code,
+    });
 
     // OpenTag
     items.push(LexerTokenMatcher {
@@ -219,11 +515,92 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Initial,
     });
 
-    // TODO Or
+    // Or
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::Or,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("or".to_string()),
+        state: LexerState::Code,
+    });
+    
     // TODO SingleQuotedString
     // TODO StringConcatenation
-    // TODO Subtraction
-    // TODO SubtractOne
+
+    // Subtraction
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::Subtraction,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("-".to_string()),
+        state: LexerState::Code,
+    });
+
+    // SubtractOne
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::SubtractOne,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("--".to_string()),
+        state: LexerState::Code,
+    });
 
     // Variable
     items.push(LexerTokenMatcher {

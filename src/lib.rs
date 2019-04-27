@@ -38,7 +38,7 @@ pub enum LexerToken {
     Division,
     DoubleQuotedString(String),
     Echo,
-    EndForeach,
+    EndForEach,
     ElseIf,
     EndIf,
     Equals,
