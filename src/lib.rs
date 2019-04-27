@@ -85,7 +85,7 @@ struct LexerTokenMatcher {
             &mut Vec<LexerElement>,
             &mut LexerState,
         ),
-    >,
+        >,
     pattern: LexerTokenMatchPattern,
     pub state: LexerState,
 }
@@ -199,8 +199,8 @@ impl Template {
 
         // New algorithm here
         let mut best_match_index: usize = 0;
-        let mut best_match_length: usize = 0;
-        let mut index: usize = 0;
+        let mut best_match_length: usize;
+        let mut index: usize;
 
         let mut items: Vec<LexerTokenMatcher> = Vec::new();
 
@@ -208,16 +208,15 @@ impl Template {
         items.push(LexerTokenMatcher {
             logic: Box::new(
                 |buffer: &str,
-                 char_index: &usize,
-                 char_start: &usize,
-                 char_end: &usize,
-                 length: &usize,
-                 line_index: &usize,
-                 line_start: &usize,
-                 line_end: &usize,
-                 elements: &mut Vec<LexerElement>,
-                 state: &mut LexerState| {
-                    println!("Was here {}-{} of '{}'", &char_start, &char_end, &buffer);
+                char_index: &usize,
+                char_start: &usize,
+                char_end: &usize,
+                length: &usize,
+                line_index: &usize,
+                line_start: &usize,
+                line_end: &usize,
+                elements: &mut Vec<LexerElement>,
+                state: &mut LexerState| {
                     let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
                     elements.push(LexerElement {
                         position: LexerPosition {
@@ -230,10 +229,10 @@ impl Template {
                     });
                     elements.push(LexerElement {
                         position: LexerPosition {
-                            char_end: char_index + length,
+                            char_end: (char_index + length),
                             char_start: (*char_index),
-                            line_end: (*line_index),
-                            line_start: (*line_index),
+                            line_end: (*line_end),
+                            line_start: (*line_start),
                         },
                         token: LexerToken::OpenTag,
                     });
@@ -242,6 +241,88 @@ impl Template {
             ),
             pattern: LexerTokenMatchPattern::Literal("{% ".to_string()),
             state: LexerState::Initial,
+        });
+        items.push(LexerTokenMatcher {
+            logic: Box::new(
+                |buffer: &str,
+                char_index: &usize,
+                char_start: &usize,
+                char_end: &usize,
+                length: &usize,
+                line_index: &usize,
+                line_start: &usize,
+                line_end: &usize,
+                elements: &mut Vec<LexerElement>,
+                state: &mut LexerState| {
+                    elements.push(LexerElement {
+                        position: LexerPosition {
+                            char_end: (char_index + length),
+                            char_start: (*char_index),
+                            line_end: (*line_end),
+                            line_start: (*line_start),
+                        },
+                        token: LexerToken::Echo,
+                    });
+                    (*state) = LexerState::Code;
+                },
+            ),
+            pattern: LexerTokenMatchPattern::Literal("echo".to_string()),
+            state: LexerState::Code,
+        });
+        items.push(LexerTokenMatcher {
+            logic: Box::new(
+                |buffer: &str,
+                char_index: &usize,
+                char_start: &usize,
+                char_end: &usize,
+                length: &usize,
+                line_index: &usize,
+                line_start: &usize,
+                line_end: &usize,
+                elements: &mut Vec<LexerElement>,
+                state: &mut LexerState| {
+                    let variable_name = &buffer[(char_index+1)..(char_index + length)];
+                    elements.push(LexerElement {
+                        position: LexerPosition {
+                            char_end: (char_index + length),
+                            char_start: (*char_index),
+                            line_end: (*line_end),
+                            line_start: (*line_start),
+                        },
+                        token: LexerToken::Variable(variable_name.to_string()),
+                    });
+                    (*state) = LexerState::Code;
+                },
+            ),
+            pattern: LexerTokenMatchPattern::Regex(r"\$[a-zA-Z][a-zA-Z0-9_]*".to_string()),
+            state: LexerState::Code,
+        });
+        items.push(LexerTokenMatcher {
+            logic: Box::new(
+                |_buffer: &str,
+                char_index: &usize,
+                char_start: &usize,
+                char_end: &usize,
+                length: &usize,
+                line_index: &usize,
+                line_start: &usize,
+                line_end: &usize,
+                elements: &mut Vec<LexerElement>,
+                state: &mut LexerState| {
+                    elements.push(LexerElement {
+                        position: LexerPosition {
+                            char_end: (char_index + length),
+                            char_start: (*char_index),
+                            line_end: (*line_end),
+                            line_start: (*line_start),
+                        },
+                        token: LexerToken::CloseTag,
+                    });
+                    (*state) = LexerState::Initial;
+                },
+            ),
+            pattern: LexerTokenMatchPattern::Literal(" %}".to_string()),
+            state: LexerState::Code,
         });
 
         while char_index < form.len() {
@@ -384,8 +465,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 15,
-                char_start: 11,
+                char_end: 14,
+                char_start: 10,
                 line_end: 1,
                 line_start: 1,
             },
@@ -393,8 +474,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 20,
-                char_start: 16,
+                char_end: 19,
+                char_start: 15,
                 line_end: 1,
                 line_start: 1,
             },
@@ -402,8 +483,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 23,
-                char_start: 20,
+                char_end: 22,
+                char_start: 19,
                 line_end: 1,
                 line_start: 1,
             },
