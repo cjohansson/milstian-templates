@@ -211,6 +211,65 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
     });
 
     // TODO DoubleQuotedString
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+
+                // Search string forward until next un-escaped double quote
+                let mut index: usize = *char_index + 1;
+                let mut index_end: Option<usize> = None;
+                let mut previous_was_escape = false;
+                while index < buffer.len() {
+                    if previous_was_escape {
+                        previous_was_escape = false;
+                    } else {
+                        match buffer.chars().nth(index) {
+                            Some(character) => {
+                                println!("Successfully decodeded character at {} in '{}'", &index, &buffer);
+                                if character == '\\' {
+                                    previous_was_escape = true;
+                                } else if character == '"' {
+                                    println!("Character '{}' is double quote", &character);
+                                    index_end = Some(index);
+                                    break;
+                                } else {
+                                    println!("Character '{}' is not double quote", &character);
+                                }
+                            }
+                            None => {
+                                println!("Failed to decoded character at {} '{}' in '{}'", &index, &buffer[index..index], &buffer);
+                            }
+                        }
+                    }
+                    index = index + 1;
+                }
+
+                if index_end.is_some() {
+                    let contents = &buffer[(char_index + 1)..(index_end.unwrap())];
+                    elements.push(LexerElement {
+                        position: LexerPosition {
+                            char_end: index_end.unwrap(),
+                            char_start: (*char_index),
+                            line_end: (*line_end),
+                            line_start: (*line_start),
+                        },
+                        token: LexerToken::DoubleQuotedString(contents.to_string()),
+                    });
+                }
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("\"".to_string()),
+        state: LexerState::Code,
+    });
 
     // Echo
     items.push(LexerTokenMatcher {
@@ -544,7 +603,32 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
     });
     
     // TODO SingleQuotedString
-    // TODO StringConcatenation
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+            char_index: &usize,
+            char_start: &usize,
+            char_end: &usize,
+            length: &usize,
+            line_index: &usize,
+            line_start: &usize,
+            line_end: &usize,
+            elements: &mut Vec<LexerElement>,
+            state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::StringConcatenation,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal(".".to_string()),
+        state: LexerState::Code,
+    });
 
     // Subtraction
     items.push(LexerTokenMatcher {
@@ -628,7 +712,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
                 (*state) = LexerState::Code;
             },
         ),
-        pattern: LexerTokenMatchPattern::Regex(r"\$[a-zA-Z][a-zA-Z0-9_]*".to_string()),
+        pattern: LexerTokenMatchPattern::Regex(r"[a-zA-Z][a-zA-Z0-9_]*".to_string()),
         state: LexerState::Code,
     });
 

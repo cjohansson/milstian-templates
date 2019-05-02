@@ -332,7 +332,7 @@ mod tests {
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
 
-        let lexed_tokens = Template::new("Random {% echo $var %} More text here {{ $var }}".to_string(), None).lex().unwrap();
+        let lexed_tokens = Template::new("Random {% echo var %} More text here {{ \"random string\" }}".to_string(), None).lex().unwrap();
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
@@ -363,8 +363,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 19,
-                char_start: 15,
+                char_end: 18,
+                char_start: 14,
                 line_end: 1,
                 line_start: 1,
             },
@@ -372,8 +372,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 22,
-                char_start: 19,
+                char_end: 21,
+                char_start: 18,
                 line_end: 1,
                 line_start: 1,
             },
@@ -381,8 +381,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 37,
-                char_start: 22,
+                char_end: 36,
+                char_start: 21,
                 line_end: 1,
                 line_start: 1,
             },
@@ -390,8 +390,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 41,
-                char_start: 38,
+                char_end: 40,
+                char_start: 37,
                 line_end: 1,
                 line_start: 1,
             },
@@ -399,17 +399,17 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 45,
-                char_start: 41,
+                char_end: 54,
+                char_start: 40,
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::Variable("var".to_string()),
+            token: LexerToken::DoubleQuotedString("random string".to_string()),
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 48,
-                char_start: 45,
+                char_end: 58,
+                char_start: 55,
                 line_end: 1,
                 line_start: 1,
             },
