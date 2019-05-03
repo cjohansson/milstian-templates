@@ -677,6 +677,9 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
 
+    // TODO Should change logic and make test function implementable to fix things like adjusting char_index dynamically
+    // TODO Should not use .chars().nth() in loop, rather iterate over chars with index
+
     // Variable
     items.push(LexerTokenMatcher {
         logic: Box::new(
@@ -690,7 +693,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             line_end: &usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
-                let variable_name = &buffer[(char_index+1)..(char_index + length)];
+                let variable_name = &buffer[(*char_index)..(char_index + length)];
                 elements.push(LexerElement {
                     position: LexerPosition {
                         char_end: (char_index + length),
