@@ -232,21 +232,12 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
                     if previous_was_escape {
                         previous_was_escape = false;
                     } else {
-                        match buffer.chars().nth(index) {
-                            Some(character) => {
-                                println!("Successfully decodeded character at {} in '{}'", &index, &buffer);
-                                if character == '\\' {
-                                    previous_was_escape = true;
-                                } else if character == '"' {
-                                    println!("Character '{}' is double quote", &character);
-                                    index_end = Some(index);
-                                    break;
-                                } else {
-                                    println!("Character '{}' is not double quote", &character);
-                                }
-                            }
-                            None => {
-                                println!("Failed to decoded character at {} '{}' in '{}'", &index, &buffer[index..index], &buffer);
+                        if let Some(character) = buffer.chars().nth(index) {
+                            if character == '\\' {
+                                previous_was_escape = true;
+                            } else if character == '"' {
+                                index_end = Some(index);
+                                break;
                             }
                         }
                     }
