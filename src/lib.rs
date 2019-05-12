@@ -89,7 +89,7 @@ pub struct LexerTokenMatcher {
             &usize, // Character index
             &usize, // Character start
             &usize, // Character end
-            &usize, // Match length
+            &mut usize, // Match length
             &usize, // Line index
             &usize, // Line start
             &usize, // Line end
@@ -130,7 +130,7 @@ impl LexerTokenMatcher {
         char_index: &usize,
         char_start: &usize,
         char_end: &usize,
-        length: &usize,
+        length: &mut usize,
         line_index: &usize,
         line_start: &usize,
         line_end: &usize,
@@ -237,7 +237,7 @@ impl Template {
                     &char_index,
                     &char_start,
                     &char_end,
-                    &best_match_length,
+                    &mut best_match_length,
                     &line_start,
                     &line_start,
                     &line_end,
@@ -364,7 +364,7 @@ mod tests {
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
                 char_end: 18,
-                char_start: 14,
+                char_start: 15,
                 line_end: 1,
                 line_start: 1,
             },
