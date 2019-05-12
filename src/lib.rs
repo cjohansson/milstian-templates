@@ -92,7 +92,7 @@ pub struct LexerTokenMatcher {
             &mut usize, // Match length
             &usize, // Line index
             &usize, // Line start
-            &usize, // Line end
+            &mut usize, // Line end
             &mut Vec<LexerElement>,
             &mut LexerState,
         ),
@@ -133,7 +133,7 @@ impl LexerTokenMatcher {
         length: &mut usize,
         line_index: &usize,
         line_start: &usize,
-        line_end: &usize,
+        line_end: &mut usize,
         elements: &mut Vec<LexerElement>,
         state: &mut LexerState,
     ) {
@@ -215,6 +215,7 @@ impl Template {
 
         let items = tokens::get_lexer_items();
         while char_index < form.len() {
+            // TODO: Should track line numbers here
             best_match_length = 0;
             index = 0;
             for item in &items {
@@ -240,13 +241,14 @@ impl Template {
                     &mut best_match_length,
                     &line_start,
                     &line_start,
-                    &line_end,
+                    &mut line_end,
                     &mut elements,
                     &mut state,
                 );
                 char_index = char_index + best_match_length;
                 char_start = char_index;
                 char_end = char_index;
+                line_index = line_end;
             } else {
                 char_end = char_index;
                 char_index = char_index + 1;

@@ -20,7 +20,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -48,7 +48,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -76,7 +76,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -104,7 +104,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -134,7 +134,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -163,7 +163,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -187,14 +187,14 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         logic: Box::new(
             |_buffer: &str,
             char_index: &usize,
-            char_start: &usize,
-            char_end: &usize,
+            _char_start: &usize,
+            _char_end: &usize,
             length: &mut usize,
-            line_index: &usize,
+            _line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
-            state: &mut LexerState| {
+            _state: &mut LexerState| {
                 elements.push(LexerElement {
                     position: LexerPosition {
                         char_end: (char_index + *length),
@@ -210,19 +210,19 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
 
-    // TODO DoubleQuotedString
+    // DoubleQuotedString
     items.push(LexerTokenMatcher {
         logic: Box::new(
             |buffer: &str,
             char_index: &usize,
-            char_start: &usize,
-            char_end: &usize,
+            _char_start: &usize,
+            _char_end: &usize,
             length: &mut usize,
-            line_index: &usize,
+            _line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
-            state: &mut LexerState| {
+            _state: &mut LexerState| {
 
                 // Search string forward until next un-escaped double quote
                 let mut index: usize = *char_index + 1;
@@ -238,6 +238,8 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
                             } else if character == '"' {
                                 index_end = Some(index);
                                 break;
+                            } else if character == '\n' {
+                                *line_end = *line_end + 1;
                             }
                         }
                     }
@@ -246,7 +248,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
 
                 if index_end.is_some() {
                     let contents = &buffer[(char_index + 1)..(index_end.unwrap())];
-                    *length = (index_end.unwrap() - char_index);
+                    *length = index_end.unwrap() - char_index;
                     elements.push(LexerElement {
                         position: LexerPosition {
                             char_end: index_end.unwrap(),
@@ -273,7 +275,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -302,7 +304,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -330,7 +332,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -358,7 +360,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -386,7 +388,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -414,7 +416,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -442,7 +444,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -470,7 +472,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -498,7 +500,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
@@ -537,7 +539,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
@@ -576,7 +578,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             length: &mut usize,
             line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 elements.push(LexerElement {
@@ -594,31 +596,59 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
     
-    // TODO SingleQuotedString
+    // SingleQuotedString
     items.push(LexerTokenMatcher {
         logic: Box::new(
-            |_buffer: &str,
+            |buffer: &str,
             char_index: &usize,
-            char_start: &usize,
-            char_end: &usize,
+            _char_start: &usize,
+            _char_end: &usize,
             length: &mut usize,
-            line_index: &usize,
+            _line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
-            state: &mut LexerState| {
-                elements.push(LexerElement {
-                    position: LexerPosition {
-                        char_end: (char_index + *length),
-                        char_start: (*char_index),
-                        line_end: (*line_end),
-                        line_start: (*line_start),
-                    },
-                    token: LexerToken::StringConcatenation,
-                });
+            _state: &mut LexerState| {
+
+                // Search string forward until next un-escaped single quote
+                let mut index: usize = *char_index + 1;
+                let mut index_end: Option<usize> = None;
+                let mut previous_was_escape = false;
+                while index < buffer.len() {
+                    if previous_was_escape {
+                        previous_was_escape = false;
+                    } else {
+                        if let Some(character) = buffer.chars().nth(index) {
+                            if character == '\\' {
+                                previous_was_escape = true;
+                                
+                            } else if character == '\'' {
+                                index_end = Some(index);
+                                break;
+                            } else if character == '\n' {
+                                *line_end = *line_end + 1;
+                            }
+                        }
+                    }
+                    index = index + 1;
+                }
+
+                if index_end.is_some() {
+                    let contents = &buffer[(char_index + 1)..(index_end.unwrap())];
+                    *length = index_end.unwrap() - char_index;
+                    elements.push(LexerElement {
+                        position: LexerPosition {
+                            char_end: index_end.unwrap(),
+                            char_start: (*char_index),
+                            line_end: (*line_end),
+                            line_start: (*line_start),
+                        },
+                        token: LexerToken::SingleQuotedString(contents.to_string()),
+                    });
+                }
             },
         ),
-        pattern: LexerTokenMatchPattern::Literal(".".to_string()),
+        pattern: LexerTokenMatchPattern::Literal("\"".to_string()),
         state: LexerState::Code,
     });
 
@@ -627,14 +657,14 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         logic: Box::new(
             |_buffer: &str,
             char_index: &usize,
-            char_start: &usize,
-            char_end: &usize,
+            _char_start: &usize,
+            _char_end: &usize,
             length: &mut usize,
-            line_index: &usize,
+            _line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
-            state: &mut LexerState| {
+            _state: &mut LexerState| {
                 elements.push(LexerElement {
                     position: LexerPosition {
                         char_end: (char_index + *length),
@@ -655,14 +685,14 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         logic: Box::new(
             |_buffer: &str,
             char_index: &usize,
-            char_start: &usize,
-            char_end: &usize,
+            _char_start: &usize,
+            _char_end: &usize,
             length: &mut usize,
-            line_index: &usize,
+            _line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
-            state: &mut LexerState| {
+            _state: &mut LexerState| {
                 elements.push(LexerElement {
                     position: LexerPosition {
                         char_end: (char_index + *length),
@@ -678,20 +708,20 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
 
-    // TODO Should change logic and make test function implementable to fix things like adjusting char_index dynamically
     // TODO Should not use .chars().nth() in loop, rather iterate over chars with index
+    // TODO Should have consistent syntax for function calls, echo and print shold be regular function calls with Rust formatting features i.e. echo("Blaa {} elele", var)
 
     // Variable
     items.push(LexerTokenMatcher {
         logic: Box::new(
             |buffer: &str,
             char_index: &usize,
-            char_start: &usize,
-            char_end: &usize,
+            _char_start: &usize,
+            _char_end: &usize,
             length: &mut usize,
-            line_index: &usize,
+            _line_index: &usize,
             line_start: &usize,
-            line_end: &usize,
+            line_end: &mut usize,
             elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 let variable_name = &buffer[(*char_index)..(char_index + *length)];
