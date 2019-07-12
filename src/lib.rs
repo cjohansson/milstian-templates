@@ -33,6 +33,7 @@ pub enum LexerToken {
     And,
     Assign(String, DataType),
     Call(String, Vec<Variable>),
+    CloseParenthesis,
     CloseTag,
     CloseTagWithEcho,
     Division,
@@ -46,6 +47,7 @@ pub enum LexerToken {
     If,
     Inline(String),
     Multiplication,
+    OpenParenthesis,
     OpenTag,
     OpenTagWithEcho,
     Or,
@@ -334,7 +336,7 @@ mod tests {
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
 
-        let lexed_tokens = Template::new("Random {% echo var %} More text here {{ \"random string\" }}".to_string(), None).lex().unwrap();
+        let lexed_tokens = Template::new("Random {% echo(var) %} More text here {{ \"random string\" }}".to_string(), None).lex().unwrap();
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
