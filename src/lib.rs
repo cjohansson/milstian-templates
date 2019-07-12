@@ -39,7 +39,6 @@ pub enum LexerToken {
     Comma,
     Division,
     DoubleQuotedString(String),
-    Echo,
     EndForEach,
     ElseIf,
     EndIf,
@@ -301,7 +300,16 @@ mod tests {
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::Echo,
+            token: LexerToken::Call("echo".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 15,
+                char_start: 14,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenParenthesis,
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
@@ -314,8 +322,17 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 21,
+                char_end: 19,
                 char_start: 18,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseParenthesis,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 22,
+                char_start: 19,
                 line_end: 1,
                 line_start: 1,
             },
@@ -323,8 +340,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 36,
-                char_start: 21,
+                char_end: 37,
+                char_start: 22,
                 line_end: 1,
                 line_start: 1,
             },
@@ -332,8 +349,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 40,
-                char_start: 37,
+                char_end: 41,
+                char_start: 38,
                 line_end: 1,
                 line_start: 1,
             },
@@ -341,8 +358,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 54,
-                char_start: 40,
+                char_end: 55,
+                char_start: 41,
                 line_end: 1,
                 line_start: 1,
             },
@@ -350,8 +367,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 58,
-                char_start: 55,
+                char_end: 59,
+                char_start: 56,
                 line_end: 1,
                 line_start: 1,
             },
