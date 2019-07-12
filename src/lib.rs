@@ -32,10 +32,11 @@ pub enum LexerToken {
     AddOne,
     And,
     Assign(String, DataType),
-    Call(String, Vec<Variable>),
+    Call(String),
     CloseParenthesis,
     CloseTag,
     CloseTagWithEcho,
+    Comma,
     Division,
     DoubleQuotedString(String),
     Echo,
@@ -51,6 +52,7 @@ pub enum LexerToken {
     OpenTag,
     OpenTagWithEcho,
     Or,
+    Semicolon,
     SingleQuotedString(String),
     StringConcatenation,
     Subtraction,
@@ -167,45 +169,13 @@ impl Template {
         }
     }
 
-    fn string_ends_with_string<'b, 'c>(
-        buffer: &'b str,
-        needle: &'c str,
-    ) -> Option<(&'b str, &'c str)> {
-        if buffer.len() >= needle.len() {
-            let start = buffer.len() - needle.len();
-            let ends_with = &buffer[start..];
-            if ends_with.to_lowercase() == needle.to_lowercase() {
-                let new_buffer = &buffer[0..start];
-                return Some((new_buffer, needle));
-            }
-        }
-        None
-    }
-
-    fn string_ends_with_regex<'b, 'c>(
-        buffer: &'b str,
-        old_needle: &'c str,
-    ) -> Option<(&'b str, &'b str)> {
-        let needle = format!("{}$", old_needle);
-        let pattern = Regex::new(&needle).unwrap();
-        if pattern.is_match(buffer) {
-            let hit = pattern.find(buffer).unwrap();
-            let start = hit.start();
-            let end = hit.end();
-            let new_buffer = &buffer[0..start];
-            let matched_string = &buffer[start..end];
-            return Some((new_buffer, matched_string));
-        }
-        None
-    }
-
     fn lex(&self) -> Result<Vec<LexerElement>, &str> {
         let form: &str = &self.form;
         let mut char_index: usize = 0;
         let mut char_start: usize = 0;
         let mut char_end: usize = 1;
         let mut line_index: usize = 1;
-        let mut line_start: usize = 1;
+        let line_start: usize = 1;
         let mut line_end: usize = 1;
         let mut elements: Vec<LexerElement> = Vec::new();
         let mut state = LexerState::Initial;
@@ -272,8 +242,8 @@ impl Template {
     }
 
     fn parse(
-        lexer_tokens: Vec<LexerElement>,
-        data: &Option<HashMap<String, DataType>>,
+        _lexer_tokens: Vec<LexerElement>,
+        _data: &Option<HashMap<String, DataType>>,
     ) -> Result<String, String> {
         Err("Failed to parse tokens".to_string())
     }
@@ -282,38 +252,6 @@ impl Template {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_string_ends_with_string() {
-        let buffer = "Blaha Random";
-        assert_eq!(
-            Template::string_ends_with_string(&buffer, "andom"),
-            Some(("Blaha R", "andom"))
-        );
-        assert_eq!(Template::string_ends_with_string(&buffer, "bandom"), None);
-    }
-
-    #[test]
-    fn test_string_ends_with_regex() {
-        let buffer = "Blaha Random";
-        assert_eq!(
-            Template::string_ends_with_regex(&buffer, r" [a-zA-Z]+"),
-            Some(("Blaha", " Random"))
-        );
-        assert_eq!(Template::string_ends_with_regex(&buffer, r" [a-z]+"), None);
-
-        let buffer = "Blaha Random123";
-        assert_eq!(
-            Template::string_ends_with_regex(&buffer, r" [a-zA-Z]+"),
-            None
-        );
-
-        let buffer = "Blaha $var";
-        assert_eq!(
-            Template::string_ends_with_regex(&buffer, r"\$[a-zA-Z][a-zA-Z0-9_]*"),
-            Some(("Blaha ", "$var"))
-        );
-    }
 
     #[test]
     fn test_process() {}
