@@ -88,18 +88,18 @@ pub enum LexerTokenMatchPattern {
 pub struct LexerTokenMatcher {
     logic: Box<
         Fn(
-            &str,   // Buffer
-            &usize, // Character index
-            &usize, // Character start
-            &usize, // Character end
+            &str,       // Buffer
+            &usize,     // Character index
+            &usize,     // Character start
+            &usize,     // Character end
             &mut usize, // Match length
-            &usize, // Line index
-            &usize, // Line start
+            &usize,     // Line index
+            &usize,     // Line start
             &mut usize, // Line end
             &mut Vec<LexerElement>,
             &mut LexerState,
         ),
-        >,
+    >,
     pattern: LexerTokenMatchPattern,
     pub state: LexerState,
 }
@@ -273,7 +273,12 @@ mod tests {
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
 
-        let lexed_tokens = Template::new("Random {% echo(var) %} More text here {{ \"random string\" }}".to_string(), None).lex().unwrap();
+        let lexed_tokens = Template::new(
+            "Random {% echo(var) %} More text here {{ \"random string\" }}".to_string(),
+            None,
+        )
+        .lex()
+        .unwrap();
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
