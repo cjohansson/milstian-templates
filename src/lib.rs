@@ -44,8 +44,12 @@ pub enum LexerToken {
     EndIf,
     Equals,
     ForEach,
+    GreaterThan,
+    GreaterOrEqualThan,
     If,
     Inline(String),
+    LesserThan,
+    LesserOrEqualThan,
     Multiplication,
     OpenParenthesis,
     OpenTag,
@@ -378,6 +382,24 @@ mod tests {
                 line_start: 1,
             },
             token: LexerToken::CloseTagWithEcho,
+        });
+        assert_eq!(lexed_tokens, expected_lexed_tokens);
+
+        let lexed_tokens = Template::new(
+            "{% if a > b { echo(a); } else { echo(b); } %}".to_string(),
+            None,
+        )
+        .lex()
+        .unwrap();
+        let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 6,
+                char_start: 0,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Inline("Random ".to_string()),
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
     }

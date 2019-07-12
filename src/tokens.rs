@@ -496,6 +496,62 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
         state: LexerState::Code,
     });
 
+    // GreaterThan
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+             char_index: &usize,
+             _char_start: &usize,
+             _char_end: &usize,
+             length: &mut usize,
+             _line_index: &usize,
+             line_start: &usize,
+             line_end: &mut usize,
+             elements: &mut Vec<LexerElement>,
+             _state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + *length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::GreaterThan,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal(">".to_string()),
+        state: LexerState::Code,
+    });
+
+    // GreaterOrEqualThan
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+             char_index: &usize,
+             _char_start: &usize,
+             _char_end: &usize,
+             length: &mut usize,
+             _line_index: &usize,
+             line_start: &usize,
+             line_end: &mut usize,
+             elements: &mut Vec<LexerElement>,
+             _state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + *length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::GreaterOrEqualThan,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal(">=".to_string()),
+        state: LexerState::Code,
+    });
+
     // If
     items.push(LexerTokenMatcher {
         logic: Box::new(
@@ -521,6 +577,62 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
             },
         ),
         pattern: LexerTokenMatchPattern::Literal("if".to_string()),
+        state: LexerState::Code,
+    });
+
+    // LesserThan
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+             char_index: &usize,
+             _char_start: &usize,
+             _char_end: &usize,
+             length: &mut usize,
+             _line_index: &usize,
+             line_start: &usize,
+             line_end: &mut usize,
+             elements: &mut Vec<LexerElement>,
+             _state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + *length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::LesserThan,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("<".to_string()),
+        state: LexerState::Code,
+    });
+
+    // LesserOrEqualThan
+    items.push(LexerTokenMatcher {
+        logic: Box::new(
+            |_buffer: &str,
+             char_index: &usize,
+             _char_start: &usize,
+             _char_end: &usize,
+             length: &mut usize,
+             _line_index: &usize,
+             line_start: &usize,
+             line_end: &mut usize,
+             elements: &mut Vec<LexerElement>,
+             _state: &mut LexerState| {
+                elements.push(LexerElement {
+                    position: LexerPosition {
+                        char_end: (char_index + *length),
+                        char_start: (*char_index),
+                        line_end: (*line_end),
+                        line_start: (*line_start),
+                    },
+                    token: LexerToken::LesserOrEqualThan,
+                });
+            },
+        ),
+        pattern: LexerTokenMatchPattern::Literal("<=".to_string()),
         state: LexerState::Code,
     });
 
@@ -824,8 +936,6 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
         pattern: LexerTokenMatchPattern::Literal("--".to_string()),
         state: LexerState::Code,
     });
-
-    // TODO Should have consistent syntax for function calls, echo and print shold be regular function calls with Rust formatting features i.e. echo("Blaa {} elele", var)
 
     // Variable
     items.push(LexerTokenMatcher {
