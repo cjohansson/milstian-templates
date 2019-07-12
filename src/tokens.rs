@@ -225,14 +225,15 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             _state: &mut LexerState| {
 
                 // Search string forward until next un-escaped double quote
-                let mut index: usize = *char_index + 1;
+                let index_start: usize = *char_index + 1;
+                let mut index: usize = 0;
                 let mut index_end: Option<usize> = None;
                 let mut previous_was_escape = false;
-                while index < buffer.len() {
-                    if previous_was_escape {
-                        previous_was_escape = false;
-                    } else {
-                        if let Some(character) = buffer.chars().nth(index) {
+                for character in buffer.chars() {
+                    if index > index_start {
+                        if previous_was_escape {
+                            previous_was_escape = false;
+                        } else {
                             if character == '\\' {
                                 previous_was_escape = true;
                             } else if character == '"' {
@@ -611,14 +612,15 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
             _state: &mut LexerState| {
 
                 // Search string forward until next un-escaped single quote
-                let mut index: usize = *char_index + 1;
+                let index_start: usize = *char_index + 1;
+                let mut index: usize = 0;
                 let mut index_end: Option<usize> = None;
                 let mut previous_was_escape = false;
-                while index < buffer.len() {
-                    if previous_was_escape {
-                        previous_was_escape = false;
-                    } else {
-                        if let Some(character) = buffer.chars().nth(index) {
+                for character in buffer.chars() {
+                    if index > index_start {
+                        if previous_was_escape {
+                            previous_was_escape = false;
+                        } else {
                             if character == '\\' {
                                 previous_was_escape = true;
                                 
@@ -708,7 +710,6 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher>
         state: LexerState::Code,
     });
 
-    // TODO Should not use .chars().nth() in loop, rather iterate over chars with index
     // TODO Should have consistent syntax for function calls, echo and print shold be regular function calls with Rust formatting features i.e. echo("Blaa {} elele", var)
 
     // Variable
