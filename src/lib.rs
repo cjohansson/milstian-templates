@@ -31,7 +31,8 @@ pub enum LexerToken {
     Addition,
     AddOne,
     And,
-    Assign(String, DataType),
+    As,
+    Assign,
     Call(String),
     CloseCurlyBracket,
     CloseParenthesis,
@@ -54,6 +55,8 @@ pub enum LexerToken {
     Integer(String),
     LesserThan,
     LesserOrEqualThan,
+    LesserOrGreaterThan,
+    Negation,
     Multiplication,
     OpenCurlyBracket,
     OpenParenthesis,
@@ -201,7 +204,10 @@ impl Template {
 
         let items = tokens::get_lexer_items();
         while char_index < form.len() {
-            println!("char_start: {}, char_end: {}, char_index: {}", char_start, char_end, char_index);
+            println!(
+                "char_start: {}, char_end: {}, char_index: {}",
+                char_start, char_end, char_index
+            );
             // TODO: Should track line numbers here
             best_match_length = 0;
             index = 0;
@@ -287,8 +293,6 @@ mod tests {
             token: LexerToken::Inline("Random".to_string()),
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
-
-        println!("Was here 2");
 
         let lexed_tokens = Template::new(
             "Random {% echo(var) %} More text here {{ \"random string\" }}".to_string(),
@@ -439,7 +443,7 @@ mod tests {
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::GreaterThan
+            token: LexerToken::GreaterThan,
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
@@ -475,7 +479,7 @@ mod tests {
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::OpenParenthesis
+            token: LexerToken::OpenParenthesis,
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
@@ -593,6 +597,114 @@ mod tests {
                 line_start: 1,
             },
             token: LexerToken::CloseTag,
+        });
+        assert_eq!(lexed_tokens, expected_lexed_tokens);
+
+        let lexed_tokens = Template::new(
+            "{% a = 1; a++; a--; b = 3; echo(a/3); echo(\"was here\"); (a == b); a = 1.0; foreach (a as b) {} a <= b; b >= a; a || b; a && b; a - b; a + b; a * b; a <> b %}".to_string(),
+            None,
+        )
+        .lex()
+        .unwrap();
+        let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 7,
+                char_start: 0,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Inline("Random ".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 10,
+                char_start: 7,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenTag,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 14,
+                char_start: 10,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Call("echo".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 15,
+                char_start: 14,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenParenthesis,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 18,
+                char_start: 15,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Variable("var".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 19,
+                char_start: 18,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseParenthesis,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 22,
+                char_start: 19,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseTag,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 38,
+                char_start: 22,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Inline(" More text here ".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 41,
+                char_start: 38,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenTagWithEcho,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 55,
+                char_start: 41,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::DoubleQuotedString("random string".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 59,
+                char_start: 56,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseTagWithEcho,
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
     }
