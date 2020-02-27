@@ -178,9 +178,15 @@ impl Template {
 
     fn lex(&self) -> Result<Vec<LexerElement>, &str> {
         let form: &str = &self.form;
+        // What char are we at
         let mut char_index: usize = 0;
+
+        // Start of latest match
         let mut char_start: usize = 0;
+
+        // End of latest match
         let mut char_end: usize = 0;
+
         let mut line_index: usize = 1;
         let line_start: usize = 1;
         let mut line_end: usize = 1;
@@ -194,6 +200,7 @@ impl Template {
 
         let items = tokens::get_lexer_items();
         while char_index < form.len() {
+            println!("char_start: {}, char_end: {}, char_index: {}", char_start, char_end, char_index);
             // TODO: Should track line numbers here
             best_match_length = 0;
             index = 0;
@@ -224,13 +231,12 @@ impl Template {
                     &mut elements,
                     &mut state,
                 );
+                char_start = char_index;
                 char_index = char_index + best_match_length;
                 char_end = char_index;
-                char_start = char_index;
                 line_index = line_end;
             } else {
                 char_index = char_index + 1;
-                char_start = char_index;
             }
         }
 
@@ -292,7 +298,7 @@ mod tests {
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 6,
+                char_end: 7,
                 char_start: 0,
                 line_end: 1,
                 line_start: 1,

@@ -811,7 +811,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
         logic: Box::new(
             |buffer: &str,
              char_index: &usize,
-             char_start: &usize,
+             _char_start: &usize,
              char_end: &usize,
              length: &mut usize,
              _line_index: &usize,
@@ -820,12 +820,12 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
              elements: &mut Vec<LexerElement>,
             state: &mut LexerState| {
                 // Only add inline if it's not empty
-                if char_end < char_start {
-                    let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
+                if char_end < char_index {
+                    let new_buffer: &str = &buffer[*char_end..*char_index];
                     elements.push(LexerElement {
                         position: LexerPosition {
-                            char_end: *char_end,
-                            char_start: *char_start,
+                            char_end: *char_index,
+                            char_start: *char_end,
                             line_end: *line_end,
                             line_start: *line_start,
                         },
@@ -853,7 +853,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
         logic: Box::new(
             |buffer: &str,
              char_index: &usize,
-             char_start: &usize,
+             _char_start: &usize,
              char_end: &usize,
              length: &mut usize,
              _line_index: &usize,
@@ -861,19 +861,22 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
              line_end: &mut usize,
              elements: &mut Vec<LexerElement>,
              state: &mut LexerState| {
-                let new_buffer: &str = &buffer[*char_start..(char_end + 1)];
+                 // Only add inline if it's not empty
+                 if *char_end < *char_index {
+                    let new_buffer: &str = &buffer[*char_end..*char_index];
+                    elements.push(LexerElement {
+                        position: LexerPosition {
+                            char_end: *char_index,
+                            char_start: *char_end,
+                            line_end: *line_end,
+                            line_start: *line_start,
+                        },
+                        token: LexerToken::Inline(new_buffer.to_string()),
+                    });
+                }
                 elements.push(LexerElement {
                     position: LexerPosition {
-                        char_end: *char_end,
-                        char_start: *char_start,
-                        line_end: *line_end,
-                        line_start: *line_start,
-                    },
-                    token: LexerToken::Inline(new_buffer.to_string()),
-                });
-                elements.push(LexerElement {
-                    position: LexerPosition {
-                        char_end: (char_index + *length),
+                        char_end: (*char_index + *length),
                         char_start: (*char_index),
                         line_end: (*line_end),
                         line_start: (*line_start),
