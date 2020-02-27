@@ -33,6 +33,7 @@ pub enum LexerToken {
     And,
     Assign(String, DataType),
     Call(String),
+    CloseCurlyBracket,
     CloseParenthesis,
     CloseTag,
     CloseTagWithEcho,
@@ -43,14 +44,17 @@ pub enum LexerToken {
     ElseIf,
     EndIf,
     Equals,
+    Float(String),
     ForEach,
     GreaterThan,
     GreaterOrEqualThan,
     If,
     Inline(String),
+    Integer(String),
     LesserThan,
     LesserOrEqualThan,
     Multiplication,
+    OpenCurlyBracket,
     OpenParenthesis,
     OpenTag,
     OpenTagWithEcho,
@@ -176,7 +180,7 @@ impl Template {
         let form: &str = &self.form;
         let mut char_index: usize = 0;
         let mut char_start: usize = 0;
-        let mut char_end: usize = 1;
+        let mut char_end: usize = 0;
         let mut line_index: usize = 1;
         let line_start: usize = 1;
         let mut line_end: usize = 1;
@@ -221,12 +225,12 @@ impl Template {
                     &mut state,
                 );
                 char_index = char_index + best_match_length;
-                char_start = char_index;
                 char_end = char_index;
+                char_start = char_index;
                 line_index = line_end;
             } else {
-                char_end = char_index;
                 char_index = char_index + 1;
+                char_start = char_index;
             }
         }
 
@@ -276,6 +280,8 @@ mod tests {
             token: LexerToken::Inline("Random".to_string()),
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
+
+        println!("Was here 2");
 
         let lexed_tokens = Template::new(
             "Random {% echo(var) %} More text here {{ \"random string\" }}".to_string(),
@@ -385,6 +391,9 @@ mod tests {
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
 
+        println!("Was here 3");
+
+        // TODO Fix lexing of this
         let lexed_tokens = Template::new(
             "{% if a > b { echo(a); } else { echo(b); } %}".to_string(),
             None,
@@ -394,12 +403,48 @@ mod tests {
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 6,
+                char_end: 2,
                 char_start: 0,
                 line_end: 1,
                 line_start: 1,
             },
-            token: LexerToken::Inline("Random ".to_string()),
+            token: LexerToken::OpenTag,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 6,
+                char_start: 4,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::If,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 8,
+                char_start: 7,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Variable("a".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 10,
+                char_start: 9,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::GreaterThan
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 12,
+                char_start: 11,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Variable("b".to_string()),
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
     }
