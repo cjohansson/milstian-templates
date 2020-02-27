@@ -41,6 +41,7 @@ pub enum LexerToken {
     Division,
     DoubleQuotedString(String),
     EndForEach,
+    Else,
     ElseIf,
     EndIf,
     Equals,
@@ -361,7 +362,7 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 37,
+                char_end: 38,
                 char_start: 22,
                 line_end: 1,
                 line_start: 1,
@@ -397,9 +398,6 @@ mod tests {
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
 
-        println!("Was here 3");
-
-        // TODO Fix lexing of this
         let lexed_tokens = Template::new(
             "{% if a > b { echo(a); } else { echo(b); } %}".to_string(),
             None,
@@ -409,7 +407,7 @@ mod tests {
         let mut expected_lexed_tokens: Vec<LexerElement> = Vec::new();
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 2,
+                char_end: 3,
                 char_start: 0,
                 line_end: 1,
                 line_start: 1,
@@ -418,8 +416,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 6,
-                char_start: 4,
+                char_end: 5,
+                char_start: 3,
                 line_end: 1,
                 line_start: 1,
             },
@@ -427,8 +425,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 8,
-                char_start: 7,
+                char_end: 7,
+                char_start: 6,
                 line_end: 1,
                 line_start: 1,
             },
@@ -436,8 +434,8 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 10,
-                char_start: 9,
+                char_end: 9,
+                char_start: 8,
                 line_end: 1,
                 line_start: 1,
             },
@@ -445,12 +443,156 @@ mod tests {
         });
         expected_lexed_tokens.push(LexerElement {
             position: LexerPosition {
-                char_end: 12,
-                char_start: 11,
+                char_end: 11,
+                char_start: 10,
                 line_end: 1,
                 line_start: 1,
             },
             token: LexerToken::Variable("b".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 13,
+                char_start: 12,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenCurlyBracket,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 18,
+                char_start: 14,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Call("echo".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 19,
+                char_start: 18,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenParenthesis
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 20,
+                char_start: 19,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Variable("a".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 21,
+                char_start: 20,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseParenthesis,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 22,
+                char_start: 21,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Semicolon,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 24,
+                char_start: 23,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseCurlyBracket,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 29,
+                char_start: 25,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Else,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 31,
+                char_start: 30,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenCurlyBracket,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 36,
+                char_start: 32,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Call("echo".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 37,
+                char_start: 36,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::OpenParenthesis,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 38,
+                char_start: 37,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Variable("b".to_string()),
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 39,
+                char_start: 38,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseParenthesis,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 40,
+                char_start: 39,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Semicolon,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 42,
+                char_start: 41,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseCurlyBracket,
+        });
+        expected_lexed_tokens.push(LexerElement {
+            position: LexerPosition {
+                char_end: 45,
+                char_start: 42,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::CloseTag,
         });
         assert_eq!(lexed_tokens, expected_lexed_tokens);
     }
