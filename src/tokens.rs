@@ -113,7 +113,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
                         line_end: (*line_end),
                         line_start: (*line_start),
                     },
-                    token: LexerToken::Else,
+                    token: LexerToken::As,
                 });
             },
         ),
@@ -548,7 +548,7 @@ pub fn get_lexer_items() -> Vec<LexerTokenMatcher> {
                 });
             },
         ),
-        pattern: LexerTokenMatchPattern::Literal("equals".to_string()),
+        pattern: LexerTokenMatchPattern::Literal("==".to_string()),
         state: LexerState::Code,
     });
 
