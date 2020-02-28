@@ -262,10 +262,19 @@ impl Template {
     }
 
     fn parse(
-        _lexer_tokens: Vec<LexerElement>,
+        elements: Vec<LexerElement>,
         _data: &Option<HashMap<String, DataType>>,
     ) -> Result<String, String> {
-        Err("Failed to parse tokens".to_string())
+        let mut result: String = "".to_string();
+        for element in &elements {
+            match &element.token {
+                LexerToken::Inline(string) => {
+                    result.push_str(&string);
+                }
+                _ => {}
+            }
+        }
+        Ok(result)
     }
 }
 
@@ -277,7 +286,21 @@ mod tests {
     fn test_process() {}
 
     #[test]
-    fn test_parse() {}
+    fn test_parse() {
+        let mut elements: Vec<LexerElement> = Vec::new();
+        elements.push(LexerElement {
+            position: LexerPosition {
+                char_end: 7,
+                char_start: 0,
+                line_end: 1,
+                line_start: 1,
+            },
+            token: LexerToken::Inline("Random ".to_string()),
+        });
+        let expected_string = "Random ".to_string();
+        let actual_string = Template::parse(elements, &None).unwrap();
+        assert_eq!(actual_string, expected_string);
+    }
 
     #[test]
     fn test_lex() {
