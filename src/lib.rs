@@ -78,6 +78,13 @@ pub enum LexerState {
 }
 
 #[derive(Debug, PartialEq)]
+pub enum ParserState {
+    CodeWithEcho,
+    Code,
+    Initial,
+}
+
+#[derive(Debug, PartialEq)]
 pub struct LexerPosition {
     char_end: usize,
     char_start: usize,
@@ -265,14 +272,69 @@ impl Template {
         elements: Vec<LexerElement>,
         _data: &Option<HashMap<String, DataType>>,
     ) -> Result<String, String> {
+        let mut errors: String = "".to_string();
         let mut result: String = "".to_string();
+        let mut state: ParserState = ParserState::Initial;
+        let mut echo_buffer: String = "".to_string();
         for element in &elements {
-            match &element.token {
-                LexerToken::Inline(string) => {
-                    result.push_str(&string);
+            match &state {
+                ParserState::Initial => {
+                    match &element.token {
+                        LexerToken::Inline(string) => {
+                            result.push_str(&string);
+                        },
+                        LexerToken::OpenTagWithEcho => {
+                            echo_buffer = "".to_string();
+                            state = ParserState::Code;
+                        },
+                        LexerToken::OpenTag => {
+                            state = ParserState::Code;
+                        }
+                        _ => {
+                            let error_message: String = format!(
+                                "Unexpected token: {:?}, in state: {:?}! ",
+                                element,
+                                state
+                            );
+                            errors.push_str(&error_message);
+                        }
+                    }
+                },
+                ParserState::Code => {
+                    match &element.token {
+                        LexerToken::CloseTag => {
+                            state = ParserState::Initial;
+                        }
+                        _ => {
+                            let error_message: String = format!(
+                                "Unexpected token: {:?}, in state: {:?}! ",
+                                element,
+                                state
+                            );
+                            errors.push_str(&error_message);
+                        }
+                    }
+                },
+                ParserState::CodeWithEcho => {
+                    match &element.token {
+                        LexerToken::CloseTagWithEcho => {
+                            result.push_str(&echo_buffer);
+                            state = ParserState::Initial;
+                        },
+                        _ => {
+                            let error_message: String = format!(
+                                "Unexpected token: {:?}, in state: {:?}! ",
+                                element,
+                                state
+                            );
+                            errors.push_str(&error_message);
+                        }
+                    }
                 }
-                _ => {}
             }
+        }
+        if errors.len() > 0 {
+            return Err(errors);
         }
         Ok(result)
     }
@@ -300,6 +362,17 @@ mod tests {
         let expected_string = "Random ".to_string();
         let actual_string = Template::parse(elements, &None).unwrap();
         assert_eq!(actual_string, expected_string);
+
+        let mut data: HashMap<String, DataType> = HashMap::new();
+        data.insert(
+            "b".to_string(),
+            DataType::Integer(25)
+        );
+        let expected_string = "Random 25".to_string();
+        let template = Template::new("Random {{ b }}".to_string(), Some(data));
+        let actual_string = template.process().unwrap();
+        assert_eq!(actual_string, expected_string);
+
     }
 
     #[test]
