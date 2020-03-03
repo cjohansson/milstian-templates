@@ -270,7 +270,7 @@ impl Template {
 
     fn parse(
         elements: Vec<LexerElement>,
-        _data: &Option<HashMap<String, DataType>>,
+        data: &Option<HashMap<String, DataType>>,
     ) -> Result<String, String> {
         let mut errors: String = "".to_string();
         let mut result: String = "".to_string();
@@ -285,7 +285,7 @@ impl Template {
                         },
                         LexerToken::OpenTagWithEcho => {
                             echo_buffer = "".to_string();
-                            state = ParserState::Code;
+                            state = ParserState::CodeWithEcho;
                         },
                         LexerToken::OpenTag => {
                             state = ParserState::Code;
@@ -320,6 +320,47 @@ impl Template {
                         LexerToken::CloseTagWithEcho => {
                             result.push_str(&echo_buffer);
                             state = ParserState::Initial;
+                        },
+                        LexerToken::Variable(a) => {
+                            match data {
+                                Some(data_store) => {
+                                    if let Some(variable) = data_store.get(a) {
+                                        match variable {
+                                            DataType::Float(value) => {
+                                                echo_buffer.push_str(&format!("{}", value));
+                                            },
+                                            DataType::HashMap(_value) => {
+                                                // TODO Do logic here
+                                            },
+                                            DataType::Integer(value) => {
+                                                echo_buffer.push_str(&format!("{}", value));
+                                            },
+                                            DataType::String(value) => {
+                                                echo_buffer.push_str(&format!("{}", value));
+                                            },
+                                            DataType::Vector(_functions) => {
+                                                // TODO Do logic here
+                                            }
+                                        }
+                                    } else {
+                                        let error_message: String = format!(
+                                            "Reference to undefined variable, token: {:?}, in state: {:?}! ",
+                                            element,
+                                            state
+                                        );
+                                        errors.push_str(&error_message);
+                                    }
+                                },
+                                None => {
+                                    let error_message: String = format!(
+                                        "Reference to variable when no variables are defined, token: {:?}, in state: {:?}! ",
+                                        element,
+                                        state
+                                    );
+                                    errors.push_str(&error_message);
+                                }
+                            }
+                            
                         },
                         _ => {
                             let error_message: String = format!(
